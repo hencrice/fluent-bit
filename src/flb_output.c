@@ -368,6 +368,10 @@ static inline int prop_key_check(const char *key, const char *kv, int k_len)
     return -1;
 }
 
+void flb_output_return_no_inline(int x) {
+    flb_output_return_do(x);                                            \
+}
+
 /* Override a configuration property for the given input_instance plugin */
 int flb_output_set_property(struct flb_output_instance *ins,
                             const char *k, const char *v)
