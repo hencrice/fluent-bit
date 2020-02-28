@@ -491,6 +491,11 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
 #endif
 }
 
+static void flb_output_return(int x) {
+    flb_output_return_do(x);                                            \
+    return
+}
+
 static inline void flb_output_return_do(int x)
 {
     struct flb_thread *th;
