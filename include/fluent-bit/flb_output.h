@@ -507,7 +507,7 @@ static inline void flb_output_return_do(int x)
     flb_output_return_do(x);                                            \
     return
 
-static void flb_output_return_no_inline(int x) {
+void flb_output_return_no_inline(int x) {
     flb_output_return_do(x);                                            \
 }
 
