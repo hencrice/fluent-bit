@@ -491,10 +491,6 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
 #endif
 }
 
-static void flb_output_return_no_inline(int x) {
-    flb_output_return_do(x);                                            \
-}
-
 static inline void flb_output_return_do(int x)
 {
     struct flb_thread *th;
@@ -510,6 +506,10 @@ static inline void flb_output_return_do(int x)
 #define FLB_OUTPUT_RETURN(x)                                            \
     flb_output_return_do(x);                                            \
     return
+
+static void flb_output_return_no_inline(int x) {
+    flb_output_return_do(x);                                            \
+}
 
 static inline int flb_output_config_map_set(struct flb_output_instance *ins,
                                             void *context)
