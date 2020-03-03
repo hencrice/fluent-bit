@@ -200,7 +200,7 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     struct flb_plugin *plugin;
     struct flb_input_plugin *input;
     struct flb_filter_plugin *filter;
-    int *output;
+    struct simple_s *output;
 
     /* Open the shared object file: dlopen(3) */
     dso_handle = get_handle(path);
@@ -244,10 +244,10 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     }
     else if (is_output(plugin_stname) == FLB_TRUE) {
         type = FLB_PLUGIN_OUTPUT;
-        output = (int *) symbol;
-        fprintf(stderr, "In C type: %d\n", *output);
-        // fprintf(stderr, "In C type: %d\n", output->type);
-        // fprintf(stderr, "In C flags: %d\n", output->flags);
+        output = (struct simple *) *symbol;
+        // fprintf(stderr, "In C type: %d\n", *output);
+        fprintf(stderr, "In C type: %d\n", output->type);
+        fprintf(stderr, "In C flags: %d\n", output->flags);
         fflush(stderr);
         // mk_list_add(&output->_head, &config->out_plugins);
     }
