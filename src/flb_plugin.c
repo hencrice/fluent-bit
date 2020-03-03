@@ -212,6 +212,8 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     }
 
     /* Get the registration structure */
+    printf("expected plugin name: %s\n", plugin_stname);
+    fflush(stdout);
     symbol = load_symbol(dso_handle, plugin_stname);
     if (!symbol) {
         flb_error("[plugin] cannot load plugin '%s', "
@@ -236,6 +238,7 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     else if (is_output(plugin_stname) == FLB_TRUE) {
         type = FLB_PLUGIN_OUTPUT;
         output = (struct flb_output_plugin *) symbol;
+        print("type: %d\n", output->type);
         printf("name: %s\n", output->name);
         fflush(stdout);
         mk_list_add(&output->_head, &config->out_plugins);
