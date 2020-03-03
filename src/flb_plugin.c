@@ -200,7 +200,8 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     struct flb_plugin *plugin;
     struct flb_input_plugin *input;
     struct flb_filter_plugin *filter;
-    struct simple_s **output;
+    // https://stackoverflow.com/questions/346730/how-to-work-with-pointer-to-pointer-to-structure-in-c
+    int *output;
 
     /* Open the shared object file: dlopen(3) */
     dso_handle = get_handle(path);
@@ -244,10 +245,10 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     }
     else if (is_output(plugin_stname) == FLB_TRUE) {
         type = FLB_PLUGIN_OUTPUT;
-        output = (struct simple_s **) symbol;
-        // fprintf(stderr, "In C type: %d\n", *output);
-        fprintf(stderr, "In C type: %d\n", (*output)->type);
-        fprintf(stderr, "In C flags: %d\n", (*output)->flags);
+        output = (int *) symbol;
+        fprintf(stderr, "In C type: %d\n", *output);
+        // fprintf(stderr, "In C type: %d\n", (*output)->type);
+        // fprintf(stderr, "In C flags: %d\n", (*output)->flags);
         fflush(stderr);
         // mk_list_add(&output->_head, &config->out_plugins);
     }
