@@ -248,7 +248,7 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
         fprintf(stderr, "In C type: %d\n", output->type);
         fprintf(stderr, "In C flags: %d\n", output->flags);
         fflush(stderr);
-        mk_list_add(&output->_head, &config->out_plugins);
+        // mk_list_add(&output->_head, &config->out_plugins);
     }
     flb_free(plugin_stname);
 
