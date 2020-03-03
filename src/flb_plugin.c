@@ -238,7 +238,7 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     else if (is_output(plugin_stname) == FLB_TRUE) {
         type = FLB_PLUGIN_OUTPUT;
         output = (struct flb_output_plugin *) symbol;
-        print("type: %d\n", output->type);
+        printf("type: %d\n", output->type);
         printf("name: %s\n", output->name);
         fflush(stdout);
         mk_list_add(&output->_head, &config->out_plugins);
