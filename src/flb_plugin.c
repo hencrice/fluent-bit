@@ -245,8 +245,8 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     else if (is_output(plugin_stname) == FLB_TRUE) {
         type = FLB_PLUGIN_OUTPUT;
         output = (struct simple_s *) symbol;
-        printf("type: %d\n", output->type);
-        printf("flags: %d\n", output->flags);
+        printf("In C type: %d\n", output->type);
+        printf("In C flags: %d\n", output->flags);
         fflush(stdout);
         mk_list_add(&output->_head, &config->out_plugins);
     }
