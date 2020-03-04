@@ -54,6 +54,12 @@ static inline void mk_list_init(struct mk_list *list)
 static inline void __mk_list_add(struct mk_list *_new, struct mk_list *prev,
                                  struct mk_list *next)
 {
+    fprintf(stderr, "sizeof _new: %d\n", sizeof(*_new));
+    fprintf(stderr, "sizeof *_new: %d\n", sizeof(*_new));
+    fprintf(stderr, "sizeof prev: %d\n", sizeof(prev));
+    fprintf(stderr, "sizeof *prev: %d\n", sizeof(*prev));
+    fprintf(stderr, "sizeof next: %d\n", sizeof(next));
+    fprintf(stderr, "sizeof *next: %d\n", sizeof(*next));
     fprintf(stderr, "_new: %p\n", _new);
     fprintf(stderr, "prev: %p\n", prev);
     fprintf(stderr, "next: %p\n", next);
