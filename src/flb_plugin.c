@@ -248,10 +248,10 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
         output = (struct flb_output_plugin *) symbol;
         fprintf(stderr, "type: %d\n", output->type);
         fprintf(stderr, "name: %s\n", output->name);
-        fprintf(stderr, "type: %s\n", output->description);
-        fprintf(stderr, "type: %p\n", output->cb_init);
-        fprintf(stderr, "type: %p\n", output->cb_flush);
-        fprintf(stderr, "type: %p\n", output->cb_exit);
+        fprintf(stderr, "description: %s\n", output->description);
+        fprintf(stderr, "cb_init: %p\n", output->cb_init);
+        fprintf(stderr, "cb_flush: %p\n", output->cb_flush);
+        fprintf(stderr, "cb_exit: %p\n", output->cb_exit);
         fflush(stderr);
         mk_list_add(&output->_head, &config->out_plugins);
     }
