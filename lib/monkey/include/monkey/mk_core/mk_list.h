@@ -22,6 +22,7 @@
 #define   	MK_LIST_H_
 
 #include <stddef.h>
+#include <stdio.h>
 
 #ifdef _WIN32
 /* Windows */
@@ -53,6 +54,9 @@ static inline void mk_list_init(struct mk_list *list)
 static inline void __mk_list_add(struct mk_list *_new, struct mk_list *prev,
                                  struct mk_list *next)
 {
+    fprintf(stderr, "_new: %p\n", _new);
+    fprintf(stderr, "prev: %p\n", prev);
+    fprintf(stderr, "next: %p\n", next);
     next->prev = _new;
     _new->next = next;
     _new->prev = prev;
