@@ -255,7 +255,7 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
         fprintf(stderr, "what 1!? %p\n", output->_head.next);
         fprintf(stderr, "what 2!? %p\n", output->_head.prev);
         fprintf(stderr, "output->proxy %p\n", output->proxy);
-        output->proxy = &output->type;
+        *output->proxy = &output->type;
         fflush(stderr);
         mk_list_add(&output->_head, &config->out_plugins);
     }
