@@ -59,9 +59,9 @@ static inline void __mk_list_add(struct mk_list *_new, struct mk_list *prev,
     fprintf(stderr, "next: %p\n", next);
     fprintf(stderr, "_new->next: %p\n", _new->next);
     next->prev = 0;
-    fprintf(stderr, "_new->prev: %p\n", _new->prev);
+    fprintf(stderr, "_next->prev: %p\n", _next->prev);
     next->prev = _new;
-    fprintf(stderr, "after _new->prev: %p\n", _new->prev);
+    fprintf(stderr, "after _new->prev: %p\n", _next->prev);
     _new->next = next;
     fprintf(stderr, "after _new->next: %p\n", _new->next);
     _new->prev = prev;
