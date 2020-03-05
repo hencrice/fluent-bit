@@ -678,7 +678,7 @@ int flb_output_init_all(struct flb_config *config)
         fprintf(stderr, "right before cb_init, ins->properties.prev: %p\n", ins->properties.prev);
         fprintf(stderr, "right before cb_init, ins->properties.next: %p\n", ins->properties.next);
         fprintf(stderr, "right before cb_init, ins->match: %p\n", ins->match);
-        ret = check_it(ins, config, ins->data);
+        ret = p->cb_init(ins, config, ins->data);
         fprintf(stderr, "right after cb_init, ins->config_map 3rd: %p\n", ins->config_map); 
         mk_list_init(&ins->th_queue);
         if (ret == -1) {
