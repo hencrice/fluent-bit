@@ -629,6 +629,7 @@ int flb_output_init_all(struct flb_config *config)
          * Before to call the initialization callback, make sure that the received
          * configuration parameters are valid if the plugin is registering a config map.
          */
+        fprintf(stderr, "name: %s\n", p->name);
         fprintf(stderr, "is there config map: %p\n", p->config_map);
         if (p->config_map) {
             /*
@@ -642,6 +643,7 @@ int flb_output_init_all(struct flb_config *config)
                 return -1;
             }
             ins->config_map = config_map;
+            fprintf(stderr, "ins->config_map: %p\n", ins->config_map);
 
             /* Validate incoming properties against config map */
             ret = flb_config_map_properties_check(ins->p->name,
