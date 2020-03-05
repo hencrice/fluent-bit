@@ -672,6 +672,11 @@ int flb_output_init_all(struct flb_config *config)
         ins->config_map = list;
         fprintf(stderr, "right before cb_init, ins->config_map 2nd: %p\n", ins->config_map);
         fprintf(stderr, "right before cb_init, ins->p: %p\n", ins->p);
+        fprintf(stderr, "right before cb_init, ins->context: %p\n", ins->context);
+        fprintf(stderr, "right before cb_init, ins->properties: %p\n", ins->properties);
+        fprintf(stderr, "right before cb_init, ins->properties.prev: %p\n", ins->properties.prev);
+        fprintf(stderr, "right before cb_init, ins->properties.next: %p\n", ins->properties.next);
+        fprintf(stderr, "right before cb_init, ins->match_: %p\n", ins->match);
         ret = p->cb_init(ins, config, ins->data);
         fprintf(stderr, "right after cb_init, ins->config_map 3rd: %p\n", ins->config_map); 
         mk_list_init(&ins->th_queue);
