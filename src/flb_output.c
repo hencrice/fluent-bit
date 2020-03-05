@@ -644,7 +644,6 @@ int flb_output_init_all(struct flb_config *config)
             }
             ins->config_map = config_map;
             fprintf(stderr, "ins->config_map: %p\n", ins->config_map);
-
             /* Validate incoming properties against config map */
             ret = flb_config_map_properties_check(ins->p->name,
                                                   &ins->properties, ins->config_map);
@@ -663,6 +662,15 @@ int flb_output_init_all(struct flb_config *config)
         ins->mask_id = 300;
         fprintf(stderr, "right before cb_init, ins->mask_id: %d\n", ins->mask_id);
         fprintf(stderr, "right before cb_init, ins->config_map: %p\n", ins->config_map);
+        struct mk_list *list;
+        list = flb_malloc(sizeof(struct mk_list));
+        if (!list) {
+            flb_errno();
+            return NULL;
+        }
+        mk_list_init(list);
+        ins->config_map = list;
+        fprintf(stderr, "right before cb_init, ins->config_map 2nd: %p\n", ins->config_map);
         ret = p->cb_init(ins, config, ins->data);
         mk_list_init(&ins->th_queue);
         if (ret == -1) {
