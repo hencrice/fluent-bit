@@ -45,6 +45,7 @@ static int cb_stdout_init(struct flb_output_instance *ins,
     }
     ctx->ins = ins;
 
+    fprintf(stderr, "ins->config_map: %p\n", ins->config_map);
     ret = flb_output_config_map_set(ins, (void *) ctx);
     if (ret == -1) {
         flb_free(ctx);
