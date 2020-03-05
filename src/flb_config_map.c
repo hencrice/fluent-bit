@@ -18,6 +18,8 @@
  *  limitations under the License.
  */
 
+#include <stdio.h>
+
 #include <fluent-bit/flb_info.h>
 #include <fluent-bit/flb_kv.h>
 #include <fluent-bit/flb_mem.h>
@@ -507,6 +509,9 @@ static int properties_override_default(struct mk_list *properties, char *name)
  */
 int flb_config_map_set(struct mk_list *properties, struct mk_list *map, void *context)
 {
+    fprintf(stderr, "in flb_config_map_set prop: %p\n", properties);
+    fprintf(stderr, "in flb_config_map_set map: %p\n", map);
+    fprintf(stderr, "in flb_config_map_set context: %p\n", context);
     int ret;
     int len;
     char *base;
@@ -524,6 +529,8 @@ int flb_config_map_set(struct mk_list *properties, struct mk_list *map, void *co
     struct flb_config_map_val *entry = NULL;
 
     base = context;
+
+
 
     /* Link 'already processed default values' into the caller context */
     mk_list_foreach(m_head, map) {

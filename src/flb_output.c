@@ -659,18 +659,8 @@ int flb_output_init_all(struct flb_config *config)
 
         /* Initialize plugin through it 'init callback' */
         fprintf(stderr, "right before cb_init, ins: %p\n", ins);
-        ins->mask_id = 300;
         fprintf(stderr, "right before cb_init, ins->mask_id: %d\n", ins->mask_id);
         fprintf(stderr, "right before cb_init, ins->config_map: %p\n", ins->config_map);
-        struct mk_list *list;
-        list = flb_malloc(sizeof(struct mk_list));
-        if (!list) {
-            flb_errno();
-            return NULL;
-        }
-        mk_list_init(list);
-        ins->config_map = list;
-        fprintf(stderr, "right before cb_init, ins->config_map 2nd: %p\n", ins->config_map);
         fprintf(stderr, "right before cb_init, ins->p: %p\n", ins->p);
         fprintf(stderr, "right before cb_init, ins->context: %p\n", ins->context);
         fprintf(stderr, "right before cb_init, ins->properties: %p\n", ins->properties);
