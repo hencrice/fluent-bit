@@ -183,13 +183,6 @@ struct flb_plugins *flb_plugin_create()
     return ctx;
 }
 
-struct simple_s {
-    int type;
-    void *proxy;
-
-    int flags;
-};
-
 int flb_plugin_load(char *path, struct flb_plugins *ctx,
                     struct flb_config *config)
 {
@@ -246,17 +239,6 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
     else if (is_output(plugin_stname) == FLB_TRUE) {
         type = FLB_PLUGIN_OUTPUT;
         output = (struct flb_output_plugin *) symbol;
-        fprintf(stderr, "type: %d\n", output->type);
-        fprintf(stderr, "name: %s\n", output->name);
-        fprintf(stderr, "description: %s\n", output->description);
-        fprintf(stderr, "cb_init: %p\n", output->cb_init);
-        fprintf(stderr, "cb_flush: %p\n", output->cb_flush);
-        fprintf(stderr, "cb_exit: %p\n", output->cb_exit);
-        fprintf(stderr, "what 1!? %p\n", output->_head.next);
-        fprintf(stderr, "what 2!? %p\n", output->_head.prev);
-        fprintf(stderr, "output->proxy %p\n", output->proxy);
-        output->proxy = &output->type;
-        fflush(stderr);
         mk_list_add(&output->_head, &config->out_plugins);
     }
     flb_free(plugin_stname);
