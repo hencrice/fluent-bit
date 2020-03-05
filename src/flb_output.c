@@ -682,6 +682,7 @@ int flb_output_init_all(struct flb_config *config)
         struct flb_config *cc;
         cc = flb_malloc(sizeof(struct flb_config));
         ins->config = cc;
+        fprintf(stderr, "right before cb_init, ins->config: %p\n", ins->config);
         ret = p->cb_init(ins, config, ins->data);
         fprintf(stderr, "right after cb_init, ins->config_map 3rd: %p\n", ins->config_map); 
         mk_list_init(&ins->th_queue);
