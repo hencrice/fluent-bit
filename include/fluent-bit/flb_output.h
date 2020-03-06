@@ -29,6 +29,8 @@
 #define _GNU_SOURCE
 #endif
 
+#include <stdio.h>
+
 #include <monkey/mk_core.h>
 #include <fluent-bit/flb_info.h>
 #include <fluent-bit/flb_bits.h>
@@ -492,8 +494,6 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
     }
 #endif
 }
-
-#include <stdio.h>
 
 static inline void flb_output_return_do(int x)
 {
