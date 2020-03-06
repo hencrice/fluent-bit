@@ -368,10 +368,13 @@ static inline int prop_key_check(const char *key, const char *kv, int k_len)
     return -1;
 }
 
+#include <unistd.h>
+
 void flb_output_return_no_inline(int x) {
     fprintf(stderr, "called in flb_output_return_no_inline\n");
     fflush(stderr);
-    flb_output_return_do(x);                                            \
+    sleep(5);
+    // flb_output_return_do(x);                                          \
 }
 
 /* Override a configuration property for the given input_instance plugin */
