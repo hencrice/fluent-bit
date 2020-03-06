@@ -702,6 +702,7 @@ int flb_output_init_all(struct flb_config *config)
             dlclose(handle);
             return -1;
         }
+        fprintf(stderr, "right before cb_init, s: %p\n", s); 
 
         void (*fun_ptr)(
             struct flb_output_instance *,
