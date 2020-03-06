@@ -450,7 +450,9 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
 #endif
 
     out_th = (struct flb_output_thread *) FLB_THREAD_DATA(th);
+    fprintf(stderr, "flb_output_return out_th: %p\n", out_th);
     task = out_th->task;
+    fprintf(stderr, "flb_output_return task: %p\n", task);
 
     /*
      * To compose the signal event the relevant info is:
@@ -491,10 +493,15 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
 #endif
 }
 
+#include <stdio.h>
+
 static inline void flb_output_return_do(int x)
 {
     struct flb_thread *th;
+    fprintf(stderr, "flb_output_return_do flb_thread_key: %ld\n", flb_thread_key);
     th = (struct flb_thread *) pthread_getspecific(flb_thread_key);
+    fprintf(stderr, "flb_output_return_do th: %p\n", th);
+
     flb_output_return(x, th);
     /*
      * Each co-routine handler have different ways to handle a return,
