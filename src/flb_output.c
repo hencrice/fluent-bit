@@ -566,6 +566,31 @@ int check_it(struct flb_output_instance *ins, struct flb_config *config, void *d
     return 0;
 }
 
+struct sss {
+    /*
+     * configuration properties: incoming properties set by the caller. This
+     * list is what the instance received by either a configuration file or
+     * through the command line arguments. This list is validated by the
+     * plugin.
+     */
+    struct mk_list  properties;
+
+    /*
+     * configuration map: a new API is landing on Fluent Bit v1.4 that allows
+     * plugins to specify at registration time the allowed configuration
+     * properties and it data types. Config map is an optional API for now
+     * and some plugins will take advantage of it. When the API is used, the
+     * config map will validate the configuration, set default values
+     * and merge the 'properties' (above) into the map.
+     */
+    struct mk_list *config_map;
+
+    // struct mk_list _head;                /* link to config->inputs       */
+
+    /* Keep a reference to the original context this instance belongs to */
+    // struct flb_config *config;
+};
+
 /* Trigger the output plugins setup callbacks to prepare them. */
 int flb_output_init_all(struct flb_config *config)
 {
@@ -668,6 +693,14 @@ int flb_output_init_all(struct flb_config *config)
             }
         }
 
+        struct sss *ss;
+        ss = flb_malloc(sizeof(struct sss));
+        struct mk_list *list;
+        list = flb_malloc(sizeof(struct mk_list));
+        mk_list_init(list);
+        ss->properties = *list;
+        ss->config_map = config_map;
+
         /* Initialize plugin through it 'init callback' */
         fprintf(stderr, "right before cb_init, ins: %p\n", ins);
         fprintf(stderr, "right before cb_init, ins->mask_id: %ld\n", ins->mask_id);
@@ -678,7 +711,7 @@ int flb_output_init_all(struct flb_config *config)
         fprintf(stderr, "right before cb_init, ins->properties.prev: %p\n", ins->properties.prev);
         fprintf(stderr, "right before cb_init, ins->properties.next: %p\n", ins->properties.next);
         fprintf(stderr, "right before cb_init, ins->match: %p\n", ins->match);
-        
+        fprintf(stderr, "right before cb_init, ins->name: %s\n", ins->name);
         
         
         
@@ -712,11 +745,13 @@ int flb_output_init_all(struct flb_config *config)
             struct flb_config *,
             void *,
             struct mk_list *,
-            struct mk_list *
+            struct mk_list *,
+            struct sss *
         ) = s;
         fprintf(stderr, "right before cb_init, fun_ptr: %p\n", fun_ptr); 
+        fprintf(stderr, "right before cb_init, ss->config_map: %p\n", ss->config_map); 
         fflush(stderr);
-        (*fun_ptr)(ins, config, ins->data, ins->config_map, p->config_map);
+        (*fun_ptr)(ins, config, ins->data, ins->config_map, p->config_map, ss);
 
         ret = p->cb_init(ins, config, ins->data);
         mk_list_init(&ins->th_queue);
