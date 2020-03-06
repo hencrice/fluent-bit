@@ -710,6 +710,7 @@ int flb_output_init_all(struct flb_config *config)
             struct mk_list *,
             struct mk_list *
         ) = s;
+        fprintf(stderr, "right before cb_init, fun_ptr: %p\n", fun_ptr); 
         (*fun_ptr)(ins, config, ins->data, ins->config_map, p->config_map);
 
         ret = p->cb_init(ins, config, ins->data);
