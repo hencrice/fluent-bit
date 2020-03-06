@@ -252,6 +252,8 @@ static flb_sds_t helper_map_options(struct mk_list *map)
     return buf;
 }
 
+#include <stdio.h>
+
 /*
  * Given a static plugin configuration map, create a linked list representation. We use a
  * linked list using heap memory instead of the stack since a plugin can be loaded multiple
@@ -294,11 +296,18 @@ struct mk_list *flb_config_map_create(struct flb_config_map *map)
         }
 
         new->type = m->type;
+        fprintf(stderr, "flb_config_map_create: m->type %d\n", m->type);
         new->name = flb_sds_create(m->name);
+        fprintf(stderr, "flb_config_map_create: m->name %s\n", m->name);
+        fprintf(stderr, "flb_config_map_create: new->name %s\n", new->name);
         new->def_value = m->def_value;
+        fprintf(stderr, "flb_config_map_create: m->def_value %s\n", m->def_value);
         new->flags = m->flags;
+        fprintf(stderr, "flb_config_map_create: m->flags %d\n", m->flags);
         new->set_property = m->set_property;
+        fprintf(stderr, "flb_config_map_create: m->set_property %d\n", m->set_property);
         new->offset = m->offset;
+        fprintf(stderr, "flb_config_map_create: m->offset %d\n", m->offset);
         new->value.mult = NULL;
         mk_list_add(&new->_head, list);
 
