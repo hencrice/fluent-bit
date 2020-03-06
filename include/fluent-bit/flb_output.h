@@ -476,7 +476,7 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
      */
     set = FLB_TASK_SET(ret, task->id, out_th->id);
     val = FLB_BITS_U64_SET(2 /* FLB_ENGINE_TASK */, set);
-    fptinrt(stderr, "flb_output_return val: %ld\n", val);
+    fprintf(stderr, "flb_output_return val: %ld\n", val);
     fprintf(stderr, "flb_output_return out_th->id: %d\n", out_th->id);
     fprintf(stderr, "flb_output_return task->id: %d\n", task->id);
     fprintf(stderr, "flb_output_return task->ref_id: %ld\n", task->ref_id);
@@ -486,6 +486,8 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
     fprintf(stderr, "flb_output_return task->tag: %s\n", task->tag);
     fprintf(stderr, "flb_output_return task->tag_len: %d\n", task->tag_len);
     fprintf(stderr, "flb_output_return task->config: %p\n", task->config);
+    fflush(stderr);
+    fprintf(stderr, "flb_output_return task->config->ch_manager: %p\n", task->config->ch_manager);
     fflush(stderr);
 
     n = flb_pipe_w(task->config->ch_manager[1], (void *) &val, sizeof(val));
