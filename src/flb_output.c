@@ -678,6 +678,37 @@ int flb_output_init_all(struct flb_config *config)
         fprintf(stderr, "right before cb_init, ins->properties.prev: %p\n", ins->properties.prev);
         fprintf(stderr, "right before cb_init, ins->properties.next: %p\n", ins->properties.next);
         fprintf(stderr, "right before cb_init, ins->match: %p\n", ins->match);
+        
+        
+        
+        
+        // attempt to load yet another Rust function to check
+        void *handle;
+        handle = dlopen("/usr/local/lib/librust_to_c.so", RTLD_LAZY);
+        if (!handle) {
+            printf("handle is null\n");
+            return -1;
+        }
+
+        void *s;
+        s = dlsym(handle, "rust_checkit");
+        if (dlerror() != NULL) {
+            printf("dlsym is null\n");
+            return -1;
+        }
+
+        if (!s) {
+            printf("can not load plugin\n");
+            dlclose(handle);
+            return -1;
+        }
+
+        void (*fun_ptr)(struct flb_output_instance *, struct flb_config *, void *
+        ins->config_map,
+        p->config_map
+        ) = s;
+        (*fun_ptr)(ins, config, ins->data);
+
         ret = p->cb_init(ins, config, ins->data);
         mk_list_init(&ins->th_queue);
         if (ret == -1) {
