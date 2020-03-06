@@ -687,6 +687,7 @@ int flb_output_init_all(struct flb_config *config)
         handle = dlopen("/testground/flb-out_rust_stdout.so", RTLD_LAZY);
         if (!handle) {
             fprintf(stderr, "handle is null\n");
+            fflush(stderr);
             return -1;
         }
 
@@ -694,12 +695,14 @@ int flb_output_init_all(struct flb_config *config)
         s = dlsym(handle, "rust_checkit");
         if (dlerror() != NULL) {
             fprintf(stderr, "dlsym is null\n");
+            fflush(stderr);
             return -1;
         }
 
         if (!s) {
             fprintf(stderr, "can not load plugin\n");
             dlclose(handle);
+            fflush(stderr);
             return -1;
         }
         fprintf(stderr, "right before cb_init, s: %p\n", s); 
@@ -712,6 +715,7 @@ int flb_output_init_all(struct flb_config *config)
             struct mk_list *
         ) = s;
         fprintf(stderr, "right before cb_init, fun_ptr: %p\n", fun_ptr); 
+        fflush(stderr);
         (*fun_ptr)(ins, config, ins->data, ins->config_map, p->config_map);
 
         ret = p->cb_init(ins, config, ins->data);
