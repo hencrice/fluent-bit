@@ -90,6 +90,7 @@ int flb_engine_dispatch_retry(struct flb_task_retry *retry,
     return 0;
 }
 
+#include <stdio.h>
 static int tasks_start(struct flb_input_instance *in,
                        struct flb_config *config)
 {
@@ -118,6 +119,12 @@ static int tasks_start(struct flb_input_instance *in,
              * We have the Task and the Route, created a thread context for the
              * data handling.
              */
+            fprintf(stderr, "tasks_start task->id: %d\n", task->id);
+            fprintf(stderr, "tasks_start in: %d\n", in);
+            fprintf(stderr, "tasks_start route->out: %p\n", route->out);
+            fprintf(stderr, "tasks_start config: %p\n", config);
+            fprintf(stderr, "tasks_start task->tag: %p\n", task->tag);
+            fprintf(stderr, "tasks_start task->tag_len: %d\n", task->tag_len);
             th = flb_output_thread(task,
                                    in,
                                    route->out,
@@ -140,6 +147,8 @@ static int tasks_start(struct flb_input_instance *in,
  * - For each set of records under the same tag, create a Task. A Task set
  *   a reference to the records and routes through output instances.
  */
+
+
 int flb_engine_dispatch(uint64_t id, struct flb_input_instance *in,
                         struct flb_config *config)
 {
@@ -159,6 +168,9 @@ int flb_engine_dispatch(uint64_t id, struct flb_input_instance *in,
     if (!p) {
         return 0;
     }
+
+    fprintf(stderr, "flb_engine_dispatch flb_config: %p\n", config);
+    fflush(stderr);
 
     /* Look for chunks ready to go */
     mk_list_foreach_safe(head, tmp, &in->chunks) {
@@ -206,6 +218,15 @@ int flb_engine_dispatch(uint64_t id, struct flb_input_instance *in,
             }
             continue;
         }
+        fprintf(stderr, "flb_engine_dispatch task->id: %d\n", task->id);
+        fprintf(stderr, "flb_engine_dispatch task->ref_id: %ld\n", task->ref_id);
+        fprintf(stderr, "flb_engine_dispatch task->status: %c\n", task->status);
+        fprintf(stderr, "flb_engine_dispatch task->n_threads: %d\n", task->n_threads);
+        fprintf(stderr, "flb_engine_dispatch task->users: %d\n", task->users);
+        fprintf(stderr, "flb_engine_dispatch task->tag: %s\n", task->tag);
+        fprintf(stderr, "flb_engine_dispatch task->tag_len: %d\n", task->tag_len);
+        fprintf(stderr, "flb_engine_dispatch task->config: %p\n", task->config);
+        fflush(stderr); 
     }
 
     /* Start the new enqueued Tasks */

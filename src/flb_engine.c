@@ -68,9 +68,13 @@ int flb_engine_destroy_tasks(struct mk_list *tasks)
     return c;
 }
 
+#include<stdio.h>
+
 int flb_engine_flush(struct flb_config *config,
                      struct flb_input_plugin *in_force)
 {
+    fprintf(stderr, "flb_engine_flush flb_config: %p\n", config);
+    fflush(stderr);
     struct flb_input_instance *in;
     struct flb_input_plugin *p;
     struct mk_list *head;

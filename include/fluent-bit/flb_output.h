@@ -373,6 +373,7 @@ static FLB_INLINE void output_pre_cb_flush(void)
     out_p->cb_flush(data, bytes, tag, tag_len, i_ins, out_context, config);
 }
 
+#include <stdio.h>
 static FLB_INLINE
 struct flb_thread *flb_output_thread(struct flb_task *task,
                                      struct flb_input_instance *i_ins,
@@ -410,6 +411,12 @@ struct flb_thread *flb_output_thread(struct flb_task *task,
     out_th->buffer  = buf;
     out_th->config  = config;
     out_th->parent  = th;
+    fprintf(stderr, "flb_output_thread out_th->o_ins: %p\n", out_th->o_ins);
+    fprintf(stderr, "flb_output_thread out_th->task: %p\n", out_th->task);
+    fprintf(stderr, "flb_output_thread out_th->buffer: %p\n", out_th->buffer);
+    fprintf(stderr, "flb_output_thread out_th->config: %p\n", out_th->config);
+    fprintf(stderr, "flb_output_thread out_th->parent: %p\n", out_th->parent);
+    fflush(stderr);
 
     th->caller = co_active();
     th->callee = co_create(config->coro_stack_size,
