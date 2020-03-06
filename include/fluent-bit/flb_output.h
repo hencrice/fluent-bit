@@ -453,8 +453,10 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
 
     out_th = (struct flb_output_thread *) FLB_THREAD_DATA(th);
     fprintf(stderr, "flb_output_return out_th: %p\n", out_th);
+    fflush(stderr);
     task = out_th->task;
     fprintf(stderr, "flb_output_return task: %p\n", task);
+    fflush(stderr);
 
     /*
      * To compose the signal event the relevant info is:
@@ -498,9 +500,10 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
 static inline void flb_output_return_do(int x)
 {
     struct flb_thread *th;
-    fprintf(stderr, "flb_output_return_do flb_thread_key: %ld\n", flb_thread_key);
+    fprintf(stderr, "flb_output_return_do flb_thread_key: %d\n", flb_thread_key);
     th = (struct flb_thread *) pthread_getspecific(flb_thread_key);
     fprintf(stderr, "flb_output_return_do th: %p\n", th);
+    fflush(stderr);
 
     flb_output_return(x, th);
     /*
