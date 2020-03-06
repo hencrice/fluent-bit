@@ -453,6 +453,13 @@ static inline void flb_output_return(int ret, struct flb_thread *th) {
 
     out_th = (struct flb_output_thread *) FLB_THREAD_DATA(th);
     fprintf(stderr, "flb_output_return out_th: %p\n", out_th);
+    fprintf(stderr, "flb_output_return out_th->buffer: %p\n", out_th->buffer);
+    fprintf(stderr, "flb_output_return out_th->config: %p\n", out_th->config);
+    fprintf(stderr, "flb_output_return out_th->id: %d\n", out_th->id);
+    fprintf(stderr, "flb_output_return out_th->o_ins: %p\n", out_th->o_ins);
+    fprintf(stderr, "flb_output_return out_th->parent: %p\n", out_th->parent);
+    fprintf(stderr, "flb_output_return out_th->task: %p\n", out_th->task);
+    fprintf(stderr, "flb_output_return out_th->_head.next: %p\n", out_th->_head.next);
     fflush(stderr);
     task = out_th->task;
     fprintf(stderr, "flb_output_return task: %p\n", task);
@@ -506,6 +513,9 @@ static inline void flb_output_return_do(int x)
     fflush(stderr);
     th = (struct flb_thread *) pthread_getspecific(flb_thread_key);
     fprintf(stderr, "flb_output_return_do th: %p\n", th);
+    fprintf(stderr, "flb_output_return_do th->callee: %p\n", th->callee);
+    fprintf(stderr, "flb_output_return_do th->caller: %p\n", th->caller);
+    fprintf(stderr, "flb_output_return_do th->data: %p\n", th->data);
     fflush(stderr);
 
     flb_output_return(x, th);
