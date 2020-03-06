@@ -670,7 +670,7 @@ int flb_output_init_all(struct flb_config *config)
 
         /* Initialize plugin through it 'init callback' */
         fprintf(stderr, "right before cb_init, ins: %p\n", ins);
-        fprintf(stderr, "right before cb_init, ins->mask_id: %d\n", ins->mask_id);
+        fprintf(stderr, "right before cb_init, ins->mask_id: %ld\n", ins->mask_id);
         fprintf(stderr, "right before cb_init, ins->config_map: %p\n", ins->config_map);
         fprintf(stderr, "right before cb_init, ins->p: %p\n", ins->p);
         fprintf(stderr, "right before cb_init, ins->context: %p\n", ins->context);
@@ -703,11 +703,8 @@ int flb_output_init_all(struct flb_config *config)
             return -1;
         }
 
-        void (*fun_ptr)(struct flb_output_instance *, struct flb_config *, void *
-        ins->config_map,
-        p->config_map
-        ) = s;
-        (*fun_ptr)(ins, config, ins->data);
+        void (*fun_ptr)(struct flb_output_instance *, struct flb_config *, void *) = s;
+        (*fun_ptr)(ins, config, ins->data, ins->config_map, p->config_map);
 
         ret = p->cb_init(ins, config, ins->data);
         mk_list_init(&ins->th_queue);
