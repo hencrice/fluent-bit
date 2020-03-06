@@ -703,7 +703,13 @@ int flb_output_init_all(struct flb_config *config)
             return -1;
         }
 
-        void (*fun_ptr)(struct flb_output_instance *, struct flb_config *, void *) = s;
+        void (*fun_ptr)(
+            struct flb_output_instance *,
+            struct flb_config *,
+            void *,
+            struct mk_list *,
+            struct mk_list *
+        ) = s;
         (*fun_ptr)(ins, config, ins->data, ins->config_map, p->config_map);
 
         ret = p->cb_init(ins, config, ins->data);
