@@ -684,7 +684,7 @@ int flb_output_init_all(struct flb_config *config)
         
         // attempt to load yet another Rust function to check
         void *handle;
-        handle = dlopen("/usr/local/lib/librust_to_c.so", RTLD_LAZY);
+        handle = dlopen("/testground/flb-out_rust_stdout.so", RTLD_LAZY);
         if (!handle) {
             printf("handle is null\n");
             return -1;
