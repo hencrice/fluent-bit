@@ -686,19 +686,19 @@ int flb_output_init_all(struct flb_config *config)
         void *handle;
         handle = dlopen("/testground/flb-out_rust_stdout.so", RTLD_LAZY);
         if (!handle) {
-            printf("handle is null\n");
+            fprintf(stderr, "handle is null\n");
             return -1;
         }
 
         void *s;
         s = dlsym(handle, "rust_checkit");
         if (dlerror() != NULL) {
-            printf("dlsym is null\n");
+            fprintf(stderr, "dlsym is null\n");
             return -1;
         }
 
         if (!s) {
-            printf("can not load plugin\n");
+            fprintf(stderr, "can not load plugin\n");
             dlclose(handle);
             return -1;
         }
