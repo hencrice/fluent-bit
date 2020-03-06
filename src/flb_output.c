@@ -371,8 +371,8 @@ static inline int prop_key_check(const char *key, const char *kv, int k_len)
 #include <unistd.h>
 
 void flb_output_return_no_inline(int x) {
-    fprintf(stderr, "called in flb_output_return_no_inline\n");
-    fflush(stderr);
+    printf("called in flb_output_return_no_inline\n");
+    fflush(stdout);
     sleep(5);
     // flb_output_return_do(x);
 }
