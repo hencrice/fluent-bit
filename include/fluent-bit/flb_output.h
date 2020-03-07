@@ -530,6 +530,7 @@ static inline void flb_output_return_do(int x)
     fflush(stderr);
     struct flb_thread *th;
     fprintf(stderr, "flb_output_return_do flb_thread_key: %d\n", flb_thread_key);
+    fprintf(stderr, "flb_output_return_do &flb_thread_key: %p\n", &flb_thread_key);
     fflush(stderr);
     th = (struct flb_thread *) pthread_getspecific(flb_thread_key);
     fprintf(stderr, "flb_output_return_do th: %p\n", th);
