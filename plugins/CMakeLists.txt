@@ -142,7 +142,7 @@ macro(FLB_RUST_PLUGIN plugin_name)
   add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
   add_sanitizers(flb-plugin-${plugin_name})
   add_dependencies(flb-plugin-${plugin_name} ${plugin_name})
-  target_link_libraries(flb-plugin-${plugin_name} fluent-bit-static msgpackc-static)
+  target_link_libraries(flb-plugin-${plugin_name} INTERFACE fluent-bit-static msgpackc-static)
 endmacro()
 
 
