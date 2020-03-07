@@ -120,10 +120,8 @@ endmacro()
 macro(FLB_RUST_PLUGIN plugin_name)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       set(CARGO_CMD cargo build)
-      set(TARGET_DIR "debug")
   else ()
       set(CARGO_CMD cargo build --release)
-      set(TARGET_DIR "release")
   endif ()
 
   add_test(NAME ${plugin_name}-test 
