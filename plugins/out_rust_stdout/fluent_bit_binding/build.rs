@@ -18,7 +18,7 @@ fn main() {
         // bindings for.
         .header("wrapper.h")
         // https://stackoverflow.com/questions/42741815/setting-the-include-path-with-bindgen
-        .clang_arg(bindgen_includes)
+        .clang_arg(bindgen_includes.into_string().unwrap())
         .whitelist_function("flb_config_map_set")
         .whitelist_function("flb_output_get_property")
         .whitelist_function("flb_pack_to_json_format_type")
