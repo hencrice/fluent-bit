@@ -10,7 +10,7 @@ fn main() {
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
-    let binding_builder = bindgen::Builder::default()
+    let binding_builder = &mut bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
         .header("wrapper.h")
@@ -52,9 +52,9 @@ fn main() {
     let bindgen_include_dirs = env::var_os("BINDGEN_HEADER_DIRS")
         .expect("BINDGEN_HEADER_DIRS not provided");
     println!("BINDGEN_HEADER_DIRS: {:?}", bindgen_include_dirs);
-    let clang_args = bindgen_include_dirs.into_string()
-        .expect("can not convert BINDGEN_HEADER_DIRS into String")
-        .split_ascii_whitespace();
+    let clang_args_str = bindgen_include_dirs.into_string()
+        .expect("can not convert BINDGEN_HEADER_DIRS into String");
+    let clang_args = clang_args_str.split_ascii_whitespace();
     for arg in clang_args {
         // https://stackoverflow.com/questions/42741815/setting-the-include-path-with-bindgen
         binding_builder.clang_arg(arg);
