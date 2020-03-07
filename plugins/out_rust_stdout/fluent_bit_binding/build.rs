@@ -10,7 +10,7 @@ fn main() {
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
-    let binding_builder = &mut bindgen::Builder::default()
+    let mut binding_builder = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
         .header("wrapper.h")
@@ -57,7 +57,7 @@ fn main() {
     let clang_args = clang_args_str.split_ascii_whitespace();
     for arg in clang_args {
         // https://stackoverflow.com/questions/42741815/setting-the-include-path-with-bindgen
-        binding_builder.clang_arg(arg);
+        binding_builder = binding_builder.clang_arg(arg);
     }    
 
     // Finish the builder and generate the bindings.
