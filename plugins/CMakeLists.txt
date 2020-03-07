@@ -151,13 +151,12 @@ macro(FLB_RUST_PLUGIN plugin_name)
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   # ensure the dependencies are built before the custom target above
   # is built:
-  add_dependencies(${plugin_name} fluent-bit-static msgpackc-static)
   add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
-  set_target_properties(${plugin_name}
+  set_target_properties(flb-plugin-${plugin_name}
     PROPERTIES
     IMPORTED_LOCATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
   
-  add_dependencies(flb-plugin-${plugin_name} ${plugin_name})
+  add_dependencies(flb-plugin-${plugin_name} ${plugin_name} fluent-bit-static msgpackc-static)
   add_sanitizers(flb-plugin-${plugin_name})
 endmacro()
 
