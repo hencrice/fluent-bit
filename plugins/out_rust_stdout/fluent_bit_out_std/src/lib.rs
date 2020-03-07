@@ -369,17 +369,14 @@ extern "C" fn plugin_flush(
     }
 
     unsafe {
-        fluent_bit_binding::flb_output_return_no_inline(1);
+        fluent_bit_binding::flb_output_return_non_inline(1);
     }
 }
 
 #[no_mangle]
 extern "C" fn plugin_exit(data: *mut c_void, config: *mut fluent_bit_binding::flb_config) -> c_int {
-    // TODO: need to free the data argument?
-    // TODO: need to free the memory for all the into_raw calls above
-    // https://doc.rust-lang.org/std/ffi/struct.CString.html#method.into_raw
-    // otherwise it will cause memory leak!!!
-    // OUT_STDOUT2_PLUGIN
+    // TODO: Do we need to free the data argument just like the
+    // C stdout output plugin?
     0
 }
 
