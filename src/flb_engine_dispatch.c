@@ -218,6 +218,7 @@ int flb_engine_dispatch(uint64_t id, struct flb_input_instance *in,
             }
             continue;
         }
+        fprintf(stderr, "flb_engine_dispatch task: %p\n", task);)
         fprintf(stderr, "flb_engine_dispatch task->id: %d\n", task->id);
         fprintf(stderr, "flb_engine_dispatch task->ref_id: %ld\n", task->ref_id);
         fprintf(stderr, "flb_engine_dispatch task->status: %c\n", task->status);
