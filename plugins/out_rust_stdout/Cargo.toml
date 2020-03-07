@@ -1,0 +1,17 @@
+[workspace]
+
+members = [
+    "fluent_bit_out_std",
+    "fluent_bit_binding"
+]
+
+# https://doc.rust-lang.org/cargo/reference/profiles.html
+[profile.dev]
+opt-level = 0
+panic = "unwind"
+debug = 2
+
+[profile.release]
+opt-level = 2
+panic = "unwind"
+debug = 1
