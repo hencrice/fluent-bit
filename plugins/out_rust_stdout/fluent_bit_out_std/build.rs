@@ -8,7 +8,7 @@ use std::env;
 
 fn main() {
     // specify static libraries to link
-    let archive_library_search_path = env::var_os("CARGO_TARGET_DIR")..expect("CARGO_TARGET_DIR not provided");
+    let archive_library_search_path = env::var_os("CARGO_TARGET_DIR").expect("CARGO_TARGET_DIR not provided");
     println!("archive_library_search_path: {:?}", archive_library_search_path);
     println!("cargo:rustc-link-search=native={:?}", archive_library_search_path);
     println!("cargo:rustc-link-lib=static=fluent-bit"); // libfluent-bit.a
