@@ -7,6 +7,8 @@ fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
 
+    let bindgen_includes = env::var_os("BINDGEN_INCLUDES").unwrap();
+
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
@@ -14,6 +16,8 @@ fn main() {
         // The input header we would like to generate
         // bindings for.
         .header("wrapper.h")
+        // https://stackoverflow.com/questions/42741815/setting-the-include-path-with-bindgen
+        .clang_arg(bindgen_includes)
         .whitelist_function("flb_config_map_set")
         .whitelist_function("flb_output_get_property")
         .whitelist_function("flb_pack_to_json_format_type")
