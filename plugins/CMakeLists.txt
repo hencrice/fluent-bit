@@ -121,7 +121,8 @@ macro(FLB_RUST_PLUGIN plugin_name)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       set(CARGO_CMD cargo build)
   else ()
-      set(CARGO_CMD cargo build --release)
+      set(CARGO_CMD cargo build --verbose)
+      # set(CARGO_CMD cargo build --release)
   endif ()
 
   add_test(NAME ${plugin_name}-test 
