@@ -137,22 +137,22 @@ macro(FLB_RUST_PLUGIN plugin_name)
   endforeach()
   string(REPLACE ";" " " bindgen_includes "${bindgen_includes}")
   message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
-  message(STATUS, "archive_out_dir: ${ARCHIVE_OUTPUT_DIRECTORY}")
-  message(STATUS, "library_out_dir: ${LIBRARY_OUTPUT_DIRECTORY}")
+  message(STATUS, "cmake_archive_out_dir: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+  message(STATUS, "cmake_library_out_dir: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
   # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
   add_custom_target(${plugin_name}
     COMMENT "Compiling the ${plugin_name} plugin"
-    COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} ${CARGO_CMD}
+    COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} ${CARGO_CMD}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   
   #set_target_properties(${plugin_name}
   #  PROPERTIES
-  #  LOCATION ${ARCHIVE_OUTPUT_DIRECTORY}
+  #  LOCATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
   #)
   set_target_properties(${plugin_name}
     PROPERTIES
-    IMPORTED_LOCATION ${ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
+    IMPORTED_LOCATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
 
   add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
   add_sanitizers(flb-plugin-${plugin_name})
