@@ -138,13 +138,11 @@ macro(FLB_RUST_PLUGIN plugin_name)
   endforeach()
   message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
 
+  # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
   add_custom_target(${plugin_name}
     COMMENT "Compiling the ${plugin_name} plugin"
-    # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
-    COMMAND CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} WHAT="{bindgen_includes} ${CARGO_CMD}
+    ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} WHAT="{bindgen_includes} ${CARGO_CMD}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    #COMMAND_EXPAND_LISTS
-    #VERBATIM
   )
   #set_target_properties(${plugin_name}
   #  PROPERTIES
