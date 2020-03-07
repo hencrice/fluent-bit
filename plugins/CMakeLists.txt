@@ -119,10 +119,10 @@ endmacro()
 # https://michael-f-bryan.github.io/rust-ffi-guide/setting_up.html
 macro(FLB_RUST_PLUGIN plugin_name)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-      set(CARGO_CMD cargo build)
+      set(CARGO_CMD cargo build -vv)
   else ()
-      set(CARGO_CMD cargo build --verbose)
-      # set(CARGO_CMD cargo build --release)
+      set(CARGO_CMD cargo build -vv)
+      # set(CARGO_CMD cargo build -vv)
   endif ()
 
   add_test(NAME ${plugin_name}-test 
