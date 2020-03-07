@@ -7,18 +7,13 @@ fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
 
-    let bindgen_includes = env::var_os("BINDGEN_HEADER_DIRS").unwrap();
-    println!("BINDGEN_HEADER_DIRS DAWDAW: {:?}", bindgen_includes);
-
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
-    let bindings = bindgen::Builder::default()
+    let binding_builder = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
         .header("wrapper.h")
-        // https://stackoverflow.com/questions/42741815/setting-the-include-path-with-bindgen
-        .clang_arg(bindgen_includes.into_string().unwrap())
         .whitelist_function("flb_config_map_set")
         .whitelist_function("flb_output_get_property")
         .whitelist_function("flb_pack_to_json_format_type")
@@ -52,9 +47,21 @@ fn main() {
         // .derive_default(true)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-        // Finish the builder and generate the bindings.
-        .generate()
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks));
+
+    let bindgen_include_dirs = env::var_os("BINDGEN_HEADER_DIRS")
+        .expect("BINDGEN_HEADER_DIRS not provided");
+    println!("BINDGEN_HEADER_DIRS: {:?}", bindgen_includes);
+    let clang_args = bindgen_includes.into_string()
+        .expect("can not convert BINDGEN_HEADER_DIRS into String")
+        .split_ascii_whitespace();
+    for arg in clang_args {
+        // https://stackoverflow.com/questions/42741815/setting-the-include-path-with-bindgen
+        binding_builder.clang_arg(arg)
+    }    
+
+    // Finish the builder and generate the bindings.
+    let binding = binding_builder.generate()
         // Unwrap the Result and panic on failure.
         .expect("Unable to generate bindings");
 
