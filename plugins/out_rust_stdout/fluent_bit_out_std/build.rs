@@ -7,10 +7,15 @@
 use std::env;
 
 fn main() {
-    // specify static libraries to link
-    let archive_library_search_path = env::var_os("CARGO_TARGET_DIR").expect("CARGO_TARGET_DIR not provided");
-    println!("archive_library_search_path: {:?}", archive_library_search_path);
-    println!("cargo:rustc-link-search=native={:?}", archive_library_search_path);
+    // Tell Cargo where to find the static libraries
+    let archive_search_path = env::var_os("CMAKE_ARCHIVE_OUTPUT_DIRECTORY").expect("CMAKE_ARCHIVE_OUTPUT_DIRECTORY not provided");
+    let library_search_path = env::var_os("CMAKE_LIBRARY_OUTPUT_DIRECTORY").expect("CMAKE_LIBRARY_OUTPUT_DIRECTORY not provided");
+    println!("archive_search_path: {:?}", archive_search_path);
+    println!("library_search_path: {:?}", library_search_path);
+    println!("cargo:rustc-link-search=native={:?}", archive_search_path);
+    println!("cargo:rustc-link-search=native={:?}", library_search_path);
+
+    // Specify static libraries to link
     println!("cargo:rustc-link-lib=static=fluent-bit"); // libfluent-bit.a
     println!("cargo:rustc-link-lib=static=mk_core"); // libmk_core.a
     println!("cargo:rustc-link-lib=static=co"); // libco.a

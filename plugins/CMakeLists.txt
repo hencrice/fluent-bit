@@ -135,21 +135,26 @@ macro(FLB_RUST_PLUGIN plugin_name)
   foreach(dir IN LISTS dirs)
       set(bindgen_includes ${bindgen_includes} -I${dir})
   endforeach()
+  # bindgen_includes is a ";" seperated list in the form of a string
+  # so replace all ; with " ", otherwise when we pass the bindgen_includes
+  # variable to the CARGO_CMD below, bash will interpret the ";" character as
+  # the end of COMMAND, which is incorrect.
   string(REPLACE ";" " " bindgen_includes "${bindgen_includes}")
   message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
-  message(STATUS, "cmake_archive_out_dir: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
-  message(STATUS, "cmake_library_out_dir: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+  message(STATUS, "CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+  message(STATUS, "CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
   # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
   add_custom_target(${plugin_name}
     COMMENT "Compiling the ${plugin_name} plugin"
-    COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} ${CARGO_CMD}
+    COMMAND ${CMAKE_COMMAND} -E env \
+      CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} \
+      BINDGEN_HEADER_DIRS=${bindgen_includes} \
+      CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} \
+      CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} \
+      ${CARGO_CMD}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   
-  #set_target_properties(${plugin_name}
-  #  PROPERTIES
-  #  LOCATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
-  #)
   set_target_properties(${plugin_name}
     PROPERTIES
     IMPORTED_LOCATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
