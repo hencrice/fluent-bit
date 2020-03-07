@@ -135,13 +135,13 @@ macro(FLB_RUST_PLUGIN plugin_name)
   get_directory_property(dirs INCLUDE_DIRECTORIES)
   set(bindgen_includes "")
   foreach(dir IN LISTS dirs)
-      set(bindgen_includes ${bindgen_includes} -I ${dir})
+      set(bindgen_includes ${bindgen_includes} -I${dir})
   endforeach()
-  message(STATUS, "bindgen_includes: ${bindgen_includes}")
+  message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
 
   add_custom_target(${plugin_name}
     COMMENT "Compiling the ${plugin_name} plugin"
-    COMMAND BINDGEN_INCLUDES=${bindgen_includes} CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} ${CARGO_CMD}
+    COMMAND BINDGEN_INCLUDES="${bindgen_includes}" CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} ${CARGO_CMD}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   #set_target_properties(${plugin_name}
   #  PROPERTIES
