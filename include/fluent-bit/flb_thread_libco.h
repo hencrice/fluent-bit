@@ -68,8 +68,8 @@ FLB_EXPORT pthread_key_t flb_thread_key;
 #include <stdio.h>
 static FLB_INLINE void flb_thread_prepare(void)
 {
-    fprintf(stderr, "flb_thread_prepare flb_thread_key: %d\n", flb_thread_key);
     pthread_key_create(&flb_thread_key, NULL);
+    fprintf(stderr, "flb_thread_prepare flb_thread_key: %d\n", flb_thread_key);
 }
 
 static FLB_INLINE void flb_thread_yield(struct flb_thread *th, int ended)
