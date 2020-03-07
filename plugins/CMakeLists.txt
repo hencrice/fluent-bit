@@ -141,7 +141,7 @@ macro(FLB_RUST_PLUGIN plugin_name)
   # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
   add_custom_target(${plugin_name}
     COMMENT "Compiling the ${plugin_name} plugin"
-    COMMAND CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} WHAT="{bindgen_includes} ${CARGO_CMD}
+    COMMAND CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} ${CARGO_CMD}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   
   #set_target_properties(${plugin_name}
