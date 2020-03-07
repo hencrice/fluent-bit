@@ -16,7 +16,7 @@ fn main() {
     println!("cargo:rustc-link-search=native={:?}", library_search_path);
 
     // Specify static libraries to link
-    println!("cargo:rustc-link-lib=static=fluent-bit"); // libfluent-bit.a
+    println!("cargo:rustc-link-lib=static=fluent-bitdadwawdwa"); // libfluent-bit.a
     println!("cargo:rustc-link-lib=static=mk_core"); // libmk_core.a
     println!("cargo:rustc-link-lib=static=co"); // libco.a
     println!("cargo:rustc-link-lib=static=mpack-static"); // libmpack-static.a
