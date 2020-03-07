@@ -8,6 +8,7 @@ fn main() {
     println!("cargo:rerun-if-changed=wrapper.h");
 
     let bindgen_includes = env::var_os("BINDGEN_INCLUDES").unwrap();
+    println!("BINDGEN_INCLUDES DAWDAW: {:?}", bindgen_includes);
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
