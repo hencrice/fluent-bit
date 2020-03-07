@@ -249,7 +249,7 @@ extern "C" fn plugin_init(
     unsafe {
         eprintln!("rust_plugin_init ins.config_map: {:?}", (*ins).config_map);
         // https://medium.com/thinkthenrant/rust-tidbits-mut-mut-let-mut-let-mut-oh-my-ede02aa07eb6
-        let mut ctx = mem::zeroed::<fluent_bit_binding::flb_stdout>();
+        let mut ctx = mem::zeroed::<fluent_bit_binding::flb_rust_stdout>();
         ctx.ins = ins;
         // https://doc.rust-lang.org/std/ffi/enum.c_void.html
         // https://stackoverflow.com/questions/24191249/working-with-c-void-in-an-ffi

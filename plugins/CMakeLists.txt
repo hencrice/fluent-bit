@@ -113,6 +113,35 @@ macro(FLB_PLUGIN name src deps)
   target_link_libraries(flb-plugin-${name} fluent-bit-static msgpackc-static ${deps})
 endmacro()
 
+# FLB_RUST_PLUGIN: used by Rust plugins to perform registration and linking
+# adapted from:
+# https://stackoverflow.com/questions/31274577/custom-target-as-a-target-library-in-cmake
+# https://michael-f-bryan.github.io/rust-ffi-guide/setting_up.html
+macro(FLB_RUST_PLUGIN plugin_name)
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+      set(CARGO_CMD cargo build)
+      set(TARGET_DIR "debug")
+  else ()
+      set(CARGO_CMD cargo build --release)
+      set(TARGET_DIR "release")
+  endif ()
+
+  add_custom_target(${plugin_name}
+    COMMENT "Compiling the ${plugin_name} plugin"
+    COMMAND CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} ${CARGO_CMD}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  set_target_properties(${plugin_name} PROPERTIES LOCATION ${ARCHIVE_OUTPUT_DIRECTORY})
+
+  add_test(NAME ${plugin_name}-test 
+    COMMAND cargo test
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+  add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
+  add_sanitizers(flb-plugin-${plugin_name})
+  add_dependencies(flb-plugin-${plugin_name} ${plugin_name})
+  target_link_libraries(flb-plugin-${plugin_name} fluent-bit-static msgpackc-static)
+endmacro()
+
 
 # ======================
 #  Plugins Registration
@@ -192,6 +221,7 @@ REGISTER_OUT_PLUGIN("out_td")
 REGISTER_OUT_PLUGIN("out_lib")
 REGISTER_OUT_PLUGIN("out_flowcounter")
 REGISTER_OUT_PLUGIN("out_gelf")
+REGISTER_OUT_PLUGIN("out_rust_stdout")
 
 # FILTERS
 # =======

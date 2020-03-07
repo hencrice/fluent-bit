@@ -4,14 +4,12 @@
 // How the linker works:
 // https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking/
 
+use std::env;
+
 fn main() {
     // specify static libraries to link
-    println!("cargo:rustc-link-search=native=/usr/local/lib");
-    // TODO: If we get to decide the distribution channel, might want to investigate
-    // whether we want to use the shared library version of fluent-bit library
-    // (i.e. https://github.com/fluent/fluent-bit/blob/master/CMakeLists.txt#L58)
-    // instead of the static library to reduce Rust plugin memory footprint (only
-    // in the case of multi-process I guess)
+    let archive_library_search_path = env::var_os("CARGO_TARGET_DIR").unwrap();
+    println!(concat!("cargo:rustc-link-search=native=", archive_library_search_path));
     println!("cargo:rustc-link-lib=static=fluent-bit"); // libfluent-bit.a
     println!("cargo:rustc-link-lib=static=mk_core"); // libmk_core.a
     println!("cargo:rustc-link-lib=static=co"); // libco.a

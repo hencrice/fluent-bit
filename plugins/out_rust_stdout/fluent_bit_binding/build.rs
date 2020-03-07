@@ -42,7 +42,7 @@ fn main() {
         // .whitelist_type("flb_input_plugin")
         // .whitelist_type("flb_filter_plugin")
         // .whitelist_type("flb_output_plugin")
-        .whitelist_type("flb_stdout")
+        // .whitelist_type("flb_stdout")
         // https://docs.rs/bindgen/0.36.0/bindgen/struct.Builder.html#method.derive_default
         // .derive_default(true)
         // Tell cargo to invalidate the built crate whenever any of the

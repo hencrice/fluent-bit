@@ -25,6 +25,69 @@ pub type flb_sds_t = *const ::std::os::raw::c_char;
 // .whitelist_type("flb_filter_plugin")
 // .whitelist_type("flb_output_plugin")
 #[repr(C)]
+pub struct flb_rust_stdout {
+    pub out_format: ::std::os::raw::c_int,
+    pub json_date_format: ::std::os::raw::c_int,
+    pub json_date_key: flb_sds_t,
+    pub ins: *mut flb_output_instance,
+}
+
+#[test]
+fn bindgen_test_layout_flb_rust_stdout() {
+    assert_eq!(
+        ::std::mem::size_of::<flb_rust_stdout>(),
+        24usize,
+        concat!("Size of: ", stringify!(flb_rust_stdout))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<flb_rust_stdout>(),
+        8usize,
+        concat!("Alignment of ", stringify!(flb_rust_stdout))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<flb_rust_stdout>())).out_format as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(flb_rust_stdout),
+            "::",
+            stringify!(out_format)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<flb_rust_stdout>())).json_date_format as *const _ as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(flb_rust_stdout),
+            "::",
+            stringify!(json_date_format)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<flb_rust_stdout>())).json_date_key as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(flb_rust_stdout),
+            "::",
+            stringify!(json_date_key)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<flb_rust_stdout>())).ins as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(flb_rust_stdout),
+            "::",
+            stringify!(ins)
+        )
+    );
+}
+
+
+#[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct flb_net_host {
     pub ipv6: ::std::os::raw::c_int,
