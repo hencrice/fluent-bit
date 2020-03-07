@@ -126,15 +126,18 @@ macro(FLB_RUST_PLUGIN plugin_name)
       set(TARGET_DIR "release")
   endif ()
 
+  add_test(NAME ${plugin_name}-test 
+    COMMAND cargo test
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
   add_custom_target(${plugin_name}
     COMMENT "Compiling the ${plugin_name} plugin"
     COMMAND CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} ${CARGO_CMD}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-  set_target_properties(${plugin_name} PROPERTIES LOCATION ${ARCHIVE_OUTPUT_DIRECTORY})
-
-  add_test(NAME ${plugin_name}-test 
-    COMMAND cargo test
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  #set_target_properties(${plugin_name}
+  #  PROPERTIES
+  #  LOCATION ${ARCHIVE_OUTPUT_DIRECTORY}
+  #)
 
   add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
   add_sanitizers(flb-plugin-${plugin_name})
