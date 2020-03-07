@@ -136,7 +136,7 @@ macro(FLB_RUST_PLUGIN plugin_name)
   foreach(dir IN LISTS dirs)
       set(bindgen_includes ${bindgen_includes} -I${dir})
   endforeach()
-  string (REPLACE ";" " " bindgen_includes "${bindgen_includes}")
+  string(REPLACE ";" " " bindgen_includes "${bindgen_includes}")
   message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
 
   # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
