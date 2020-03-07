@@ -137,6 +137,8 @@ macro(FLB_RUST_PLUGIN plugin_name)
   endforeach()
   string(REPLACE ";" " " bindgen_includes "${bindgen_includes}")
   message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
+  message(STATUS, "archive_out_dir: ${ARCHIVE_OUTPUT_DIRECTORY}")
+  message(STATUS, "library_out_dir: ${LIBRARY_OUTPUT_DIRECTORY}")
 
   # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
   add_custom_target(${plugin_name}
