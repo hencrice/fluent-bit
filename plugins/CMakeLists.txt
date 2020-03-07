@@ -148,9 +148,9 @@ macro(FLB_RUST_PLUGIN plugin_name)
   #  PROPERTIES
   #  LOCATION ${ARCHIVE_OUTPUT_DIRECTORY}
   #)
-  #set_target_properties(${plugin_name}
-  #  PROPERTIES
-  #  IMPORTED_LOCATION ${ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
+  set_target_properties(${plugin_name}
+    PROPERTIES
+    IMPORTED_LOCATION ${ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
 
   add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
   add_sanitizers(flb-plugin-${plugin_name})
