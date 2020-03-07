@@ -117,7 +117,6 @@ endmacro()
 # adapted from:
 # https://stackoverflow.com/questions/31274577/custom-target-as-a-target-library-in-cmake
 # https://michael-f-bryan.github.io/rust-ffi-guide/setting_up.html
-# https://stackoverflow.com/questions/47475731/cmake-include-directories-for-custom-target-type
 macro(FLB_RUST_PLUGIN plugin_name)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       set(CARGO_CMD cargo build)
@@ -142,7 +141,9 @@ macro(FLB_RUST_PLUGIN plugin_name)
   add_custom_target(${plugin_name}
     COMMENT "Compiling the ${plugin_name} plugin"
     COMMAND BINDGEN_INCLUDES="${bindgen_includes}" CARGO_TARGET_DIR=${ARCHIVE_OUTPUT_DIRECTORY} ${CARGO_CMD}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND_EXPAND_LISTS
+    VERBATIM)
   #set_target_properties(${plugin_name}
   #  PROPERTIES
   #  LOCATION ${ARCHIVE_OUTPUT_DIRECTORY}
