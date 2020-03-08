@@ -1,5 +1,5 @@
 [package]
-name = "out_rust_stdout"
+name = "flb-plugin-out_rust_stdout"
 version = "0.1.0"
 authors = ["Yenlin Chen <3822365+hencrice@users.noreply.github.com>"]
 edition = "2018"
