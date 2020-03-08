@@ -680,7 +680,6 @@ macro(FLB_RUST_PLUGIN crate_name)
   set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/Rust)
 
   # https://stackoverflow.com/questions/47475731/cmake-include-directories-for-custom-target-type 
-  # https://stackoverflow.com/questions/31274577/custom-target-as-a-target-library-in-cmake
   get_directory_property(dirs INCLUDE_DIRECTORIES)
   set(bindgen_includes "")
   foreach(dir IN LISTS dirs)
@@ -697,7 +696,7 @@ macro(FLB_RUST_PLUGIN crate_name)
 
   # https://mirkokiefer.com/cmake-by-example-f95eb47d45b1
   ExternalProject_Add(
-    flb-plugin-${crate_name}_target
+    flb-plugin-${crate_name}
     DOWNLOAD_COMMAND ""
     CONFIGURE_COMMAND ""
     # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
@@ -707,28 +706,26 @@ macro(FLB_RUST_PLUGIN crate_name)
     INSTALL_COMMAND ""
     LOG_BUILD ON
     LOG_OUTPUT_ON_FAILURE ON)
-  add_sanitizers(flb-plugin-${crate_name}_target)
+  add_sanitizers(flb-plugin-${crate_name})
 
-  #add_test(NAME flb-plugin-${crate_name}_target_test 
+  #add_test(NAME flb-plugin-${crate_name}_test 
   #  COMMAND BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test
   #  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/plugins/${crate_name}")
-
   add_library(flb-plugin-${crate_name} STATIC IMPORTED GLOBAL)
-  add_dependencies(flb-plugin-${crate_name} flb-plugin-${crate_name}_target)
+  set_target_properties()
+  
+  add_dependencies(fluent-bit-bin flb-plugin-${crate_name})
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET(ARCHIVE_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/debug/libflb-plugin-${crate_name}.a)
-    set_target_properties(flb-plugin-${crate_name}
-      PROPERTIES
-      IMPORTED_LOCATION ${ARCHIVE_DEBUG})
+    SET(ARCHIVE_DEBUG /usr/src/myapp/fluent-bit/build/debug/libflb-plugin-${crate_name}.a)
+    target_link_libraries(fluent-bit-bin
+      debug ${ARCHIVE_DEBUG}
+    )
   else ()
     SET(ARCHIVE_OPTIMIZED ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/release/libflb-plugin-${crate_name}.a)
-    set_target_properties(flb-plugin-${crate_name}
-      PROPERTIES
-      IMPORTED_LOCATION ${ARCHIVE_OPTIMIZED})
+    target_link_libraries(fluent-bit-bin
+      optimized ${ARCHIVE_OPTIMIZED}
+    )
   endif ()
-
-  add_dependencies(fluent-bit-bin flb-plugin-${crate_name})
-  target_link_libraries(fluent-bit-bin flb-plugin-${crate_name})
 endmacro()
 
 # Add Rust plugins here
