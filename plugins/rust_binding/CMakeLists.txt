@@ -1,0 +1,1 @@
+BUILD_RUST_CRATE(rust_binding)

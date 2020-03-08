@@ -113,21 +113,21 @@ macro(FLB_PLUGIN name src deps)
   target_link_libraries(flb-plugin-${name} fluent-bit-static msgpackc-static ${deps})
 endmacro()
 
-# FLB_RUST_PLUGIN: used by Rust plugins to perform registration and linking
-# adapted from:
-# https://stackoverflow.com/questions/31274577/custom-target-as-a-target-library-in-cmake
-# https://michael-f-bryan.github.io/rust-ffi-guide/setting_up.html
-macro(FLB_RUST_PLUGIN plugin_name)
+# Build a Rust create as part of the fluent-bit-static library (to be linked into
+# the final fluent-bit executable)
+# https://stackoverflow.com/questions/31162438/how-can-i-build-rust-code-with-a-c-qt-cmake-project
+macro(BUILD_RUST_CRATE crate_name)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       set(CARGO_CMD cargo build -vv)
   else ()
+      # TODO: Switch to use release build
+      # set(CARGO_CMD cargo build -vv --release)
       set(CARGO_CMD cargo build -vv)
-      # set(CARGO_CMD cargo build -vv)
   endif ()
 
-  add_test(NAME ${plugin_name}-test 
-    COMMAND cargo test
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  include(ExternalProject)
+  # Set default ExternalProject root directory
+  set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/Rust)
 
   # https://stackoverflow.com/questions/47475731/cmake-include-directories-for-custom-target-type 
   get_directory_property(dirs INCLUDE_DIRECTORIES)
@@ -144,26 +144,26 @@ macro(FLB_RUST_PLUGIN plugin_name)
   message(STATUS, "CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
   message(STATUS, "CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
-  SET(LIB_FILE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
-  SET(LIB_HEADER_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/fluent_bit_binding)
-
-  add_custom_command(
-    OUTPUT ${LIB_FILE}
+  ExternalProject_Add(
+    ${crate_name}
+    DOWNLOAD_COMMAND ""
+    CONFIGURE_COMMAND ""
     # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
-    COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD}
-    COMMENT "Compiling the flb-plugin-${plugin_name} plugin"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    BUILD_COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD}
+    TEST_COMMAND "cargo test"
+    INSTALL_COMMAND ""
+    LOG_BUILD ON)
+  
+  add_dependencies(fluent-bit-static ${crate_name})
 
-  add_custom_target(flb-plugin-${plugin_name} DEPENDS ${LIB_FILE})
-  set_target_properties(flb-plugin-${plugin_name}
-    PROPERTIES
-    IMPORTED_LOCATION ${LIB_FILE}
-    INTERFACE_INCLUDE_DIRECTORIES ${LIB_HEADER_FOLDER})
-  add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
-  add_sanitizers(flb-plugin-${plugin_name})
-  target_link_libraries(flb-plugin-${plugin_name} fluent-bit-static msgpackc-static ${deps})
+  SET(LIB_FILE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${crate_name}.a)
+
+  target_link_libraries(fluent-bit-static ${LIB_FILE})
+
 endmacro()
 
+# Add the Rust binding as a target. This is used by all the Rust plugins
+add_subdirectory(rust_binding)
 
 # ======================
 #  Plugins Registration
