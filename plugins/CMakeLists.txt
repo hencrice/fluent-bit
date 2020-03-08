@@ -155,8 +155,10 @@ macro(FLB_RUST_PLUGIN plugin_name)
     COMMENT "Compiling the ${plugin_name} plugin"
   )
   add_custom_target(${plugin_name}_target DEPENDS ${ARCHIVE_FILE})
+  add_dependencies(${plugin_name}_target fluent-bit-static)
   add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
-  add_dependencies(flb-plugin-${plugin_name} ${plugin_name}_target fluent-bit-static)
+  add_dependencies(flb-plugin-${plugin_name} ${plugin_name}_target)
+  
   set_target_properties(flb-plugin-${plugin_name}
     PROPERTIES
     IMPORTED_LOCATION ${ARCHIVE_FILE})
