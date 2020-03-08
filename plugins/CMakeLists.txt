@@ -53,6 +53,7 @@ macro(REGISTER_OUT_PLUGIN name in_rust)
   string(TOUPPER ${p_name} NAME)
   if(FLB_${NAME} OR p_path)
     set(FLB_OUT_PLUGINS_DECL "${FLB_OUT_PLUGINS_DECL}extern struct flb_output_plugin ${p_name}_plugin;\n")
+    if ()
 
     # C code
     set(C_CODE          "    out = flb_malloc(sizeof(struct flb_output_plugin));\n")
@@ -64,7 +65,7 @@ macro(REGISTER_OUT_PLUGIN name in_rust)
     set(C_CODE "${C_CODE}    mk_list_add(&out->_head, &config->out_plugins);\n\n")
 
     set(FLB_OUT_PLUGINS_ADD "${FLB_OUT_PLUGINS_ADD}${C_CODE}")
-    if (in_rust)
+    if (${in_rust})
       message(STATUS "Skip the Rust plugin ${name} for now because the FLB_RUST_PLUGIN macro can not be defined beforehand. It will be added later in the top-level CMakeLists.txt.")
     elseif (p_path)
       add_subdirectory(${p_path} ${p_path})
