@@ -109,6 +109,7 @@ endmacro()
 # FLB_PLUGIN: used by plugins to perform registration and linking
 macro(FLB_PLUGIN name src deps)
   add_library(flb-plugin-${name} STATIC ${src})
+  add_dependencies(fluent-bit-bin flb-plugin-${name})
   add_sanitizers(flb-plugin-${name})
   target_link_libraries(flb-plugin-${name} fluent-bit-static msgpackc-static ${deps})
 endmacro()
