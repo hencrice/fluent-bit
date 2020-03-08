@@ -671,8 +671,7 @@ macro(FLB_RUST_PLUGIN crate_name)
       set(CARGO_CMD cargo build)
   else ()
       # TODO: Switch to use release build
-      # set(CARGO_CMD cargo build --release)
-      set(CARGO_CMD cargo build)
+      set(CARGO_CMD cargo build --release)
   endif ()
 
   include(ExternalProject)
@@ -721,7 +720,7 @@ macro(FLB_RUST_PLUGIN crate_name)
       PROPERTIES
       IMPORTED_LOCATION ${ARCHIVE_DEBUG})
   else ()
-    SET(ARCHIVE_OPTIMIZED ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/release/libflb-plugin-${crate_name}.a)
+    SET(ARCHIVE_OPTIMIZED /usr/src/myapp/fluent-bit/build/library/release/libflb-plugin-${crate_name}.a)
     set_target_properties(flb-plugin-${crate_name}
       PROPERTIES
       IMPORTED_LOCATION ${ARCHIVE_OPTIMIZED})
