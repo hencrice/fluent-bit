@@ -703,7 +703,7 @@ macro(FLB_RUST_PLUGIN crate_name)
     # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
     BUILD_COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD}
     BINARY_DIR "${CMAKE_SOURCE_DIR}/plugins/${crate_name}"
-    TEST_COMMAND "cargo test"
+    TEST_COMMAND ${CMAKE_COMMAND} cargo test
     INSTALL_COMMAND ""
     LOG_BUILD ON)
   add_sanitizers(${crate_name})
