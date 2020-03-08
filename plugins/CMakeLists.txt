@@ -109,7 +109,6 @@ endmacro()
 # FLB_PLUGIN: used by plugins to perform registration and linking
 macro(FLB_PLUGIN name src deps)
   add_library(flb-plugin-${name} STATIC ${src})
-  add_dependencies(fluent-bit-bin flb-plugin-${name})
   add_sanitizers(flb-plugin-${name})
   target_link_libraries(flb-plugin-${name} fluent-bit-static msgpackc-static ${deps})
 endmacro()
@@ -117,7 +116,7 @@ endmacro()
 # Build a Rust create as part of the fluent-bit-static library (to be linked into
 # the final fluent-bit executable)
 # https://stackoverflow.com/questions/31162438/how-can-i-build-rust-code-with-a-c-qt-cmake-project
-macro(BUILD_RUST_CRATE crate_name)
+macro(FLB_RUST_PLUGIN crate_name)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       set(CARGO_CMD cargo build -vv)
   else ()
@@ -145,9 +144,9 @@ macro(BUILD_RUST_CRATE crate_name)
   message(STATUS, "CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
   message(STATUS, "CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
+  # https://mirkokiefer.com/cmake-by-example-f95eb47d45b1
   ExternalProject_Add(
     ${crate_name}
-    DEPENDS fluent-bit-static msgpackc-static
     DOWNLOAD_COMMAND ""
     CONFIGURE_COMMAND ""
     # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
@@ -156,16 +155,13 @@ macro(BUILD_RUST_CRATE crate_name)
     INSTALL_COMMAND ""
     LOG_BUILD ON)
 
-  add_sanitizers(${crate_name})
-
   SET(LIB_FILE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${crate_name}.a)
-  add_dependencies(fluent-bit-bin ${crate_name})
-  target_link_libraries(fluent-bit-bin ${LIB_FILE})
-
+  add_library(flb-plugin-${crate_name} STATIC IMPORTED)
+  set_property(TARGET flb-plugin-${crate_name} PROPERTY IMPORTED_LOCATION ${LIB_FILE})
+  add_dependencies(flb-plugin-${crate_name} ${crate_name})
+  add_sanitizers(flb-plugin-${crate_name})
+  target_link_libraries(${crate_name} fluent-bit-static msgpackc-static)
 endmacro()
-
-# Add the Rust binding as a target. This is used by all the Rust plugins
-add_subdirectory(rust_binding)
 
 # ======================
 #  Plugins Registration

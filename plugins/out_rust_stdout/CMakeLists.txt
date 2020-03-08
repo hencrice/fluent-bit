@@ -1,1 +1,1 @@
-BUILD_RUST_CRATE(flb-plugin_out_rust_stdout)
+FLB_RUST_PLUGIN(out_rust_stdout)
