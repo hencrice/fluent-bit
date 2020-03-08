@@ -150,12 +150,11 @@ macro(FLB_RUST_PLUGIN plugin_name)
     COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS fluent-bit-static msgpackc-static)
-  
+
+  add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
   set_target_properties(flb-plugin-${plugin_name}
     PROPERTIES
     IMPORTED_LOCATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
-
-  add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
   add_sanitizers(flb-plugin-${plugin_name})
   add_dependencies(flb-plugin-${plugin_name} ${plugin_name})
   # target_link_libraries(flb-plugin-${plugin_name} INTERFACE fluent-bit-static msgpackc-static)
