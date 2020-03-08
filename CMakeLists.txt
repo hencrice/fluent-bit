@@ -702,12 +702,16 @@ macro(FLB_RUST_PLUGIN crate_name)
     CONFIGURE_COMMAND ""
     # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
     # https://cmake.org/pipermail/cmake/2012-July/051135.html
-    BUILD_COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD} COMMAND cargo test
+    BUILD_COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} ${CARGO_CMD}
     BINARY_DIR "${CMAKE_SOURCE_DIR}/plugins/${crate_name}"
     INSTALL_COMMAND ""
     LOG_BUILD ON
     LOG_OUTPUT_ON_FAILURE ON)
   add_sanitizers(${crate_name})
+
+  add_test(NAME ${crate_name}_test 
+    COMMAND BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/plugins/${crate_name}")
   
   SET(ARCHIVE_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/debug/lib${crate_name}.a)
   SET(ARCHIVE_OPTIMIZED ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/release/lib${crate_name}.a)
