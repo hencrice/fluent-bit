@@ -156,7 +156,7 @@ macro(FLB_RUST_PLUGIN plugin_name)
     PROPERTIES
     IMPORTED_LOCATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
   add_sanitizers(flb-plugin-${plugin_name})
-  add_dependencies(flb-plugin-${plugin_name} ${plugin_name})
+  add_dependencies(flb-plugin-${plugin_name} ${plugin_name}_target)
 endmacro()
 
 
