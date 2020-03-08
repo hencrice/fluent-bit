@@ -146,6 +146,7 @@ macro(BUILD_RUST_CRATE crate_name)
 
   ExternalProject_Add(
     ${crate_name}
+    DEPENDS fluent-bit-static msgpackc-static
     DOWNLOAD_COMMAND ""
     CONFIGURE_COMMAND ""
     # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
@@ -153,12 +154,12 @@ macro(BUILD_RUST_CRATE crate_name)
     TEST_COMMAND "cargo test"
     INSTALL_COMMAND ""
     LOG_BUILD ON)
-  
-  add_dependencies(fluent-bit-static ${crate_name})
+
+  add_sanitizers(${crate_name})
 
   SET(LIB_FILE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${crate_name}.a)
-
-  target_link_libraries(fluent-bit-static ${LIB_FILE})
+  add_dependencies(fluent-bit-bin ${crate_name})
+  target_link_libraries(fluent-bit-bin ${LIB_FILE})
 
 endmacro()
 
