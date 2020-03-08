@@ -716,7 +716,7 @@ macro(FLB_RUST_PLUGIN crate_name)
   add_library(flb-plugin-${crate_name} STATIC IMPORTED GLOBAL)
   add_dependencies(flb-plugin-${crate_name} flb-plugin-${crate_name}_target)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET(ARCHIVE_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/debug/libflb-plugin-${crate_name}.a)
+    SET(ARCHIVE_DEBUG /usr/src/myapp/fluent-bit/build/library/debug/libflb-plugin-${crate_name}.a)
     set_target_properties(flb-plugin-${crate_name}
       PROPERTIES
       IMPORTED_LOCATION ${ARCHIVE_DEBUG})
