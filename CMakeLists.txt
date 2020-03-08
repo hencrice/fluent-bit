@@ -708,22 +708,25 @@ macro(FLB_RUST_PLUGIN crate_name)
     LOG_OUTPUT_ON_FAILURE ON)
   add_sanitizers(flb-plugin-${crate_name})
 
-  add_test(NAME flb-plugin-${crate_name}_test 
-    COMMAND BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/plugins/${crate_name}")
-  
-  add_dependencies(fluent-bit-bin flb-plugin-${crate_name})
+  #add_test(NAME flb-plugin-${crate_name}_test 
+  #  COMMAND BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test
+  #  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/plugins/${crate_name}")
+
+  add_library(flb-plugin-${crate_name} STATIC IMPORTED GLOBAL)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET(ARCHIVE_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/debug/libflb-plugin-${crate_name}.a)
-    target_link_libraries(fluent-bit-bin
-      debug ${ARCHIVE_DEBUG}
-    )
+    set_target_properties(flb-plugin-${crate_name}
+      PROPERTIES
+      IMPORTED_LOCATION ${ARCHIVE_DEBUG})
   else ()
     SET(ARCHIVE_OPTIMIZED ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/release/libflb-plugin-${crate_name}.a)
-    target_link_libraries(fluent-bit-bin
-      optimized ${ARCHIVE_OPTIMIZED}
-    )
+    set_target_properties(flb-plugin-${crate_name}
+      PROPERTIES
+      IMPORTED_LOCATION ${ARCHIVE_OPTIMIZED})
   endif ()
+
+  add_dependencies(fluent-bit-bin flb-plugin-${crate_name})
+  target_link_libraries(fluent-bit-bin flb-plugin-${crate_name})
 endmacro()
 
 # Add Rust plugins here
