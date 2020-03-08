@@ -22,5 +22,6 @@ when the Rust plugin tried to retrieve the thread-specific data (i.e. the task v
 4. Integrating external project into an existing C/C++ project that uses cmake.
 5. The way fluent-bit "registers" plugins is inherently unsafe (i.e. globally mutable struct variables), which causes a lot of trouble when wrangling with the Rust compiler
 6. Right now the registration structure in Rust looks pretty ugly and lengthy.
+7. no space left on device (Docker for Mac) https://github.com/maxheld83/ghactions/issues/240
 
 unsafe super power: https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html
