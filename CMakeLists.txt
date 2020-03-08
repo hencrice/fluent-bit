@@ -697,7 +697,7 @@ macro(FLB_RUST_PLUGIN crate_name)
   # https://mirkokiefer.com/cmake-by-example-f95eb47d45b1
   ExternalProject_Add(
     flb-plugin-${crate_name}
-    DEPENDS fluent-bit-static msgpackc-static
+    # DEPENDS fluent-bit-static msgpackc-static
     DOWNLOAD_COMMAND ""
     CONFIGURE_COMMAND ""
     # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
