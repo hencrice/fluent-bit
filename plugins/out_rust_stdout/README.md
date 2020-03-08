@@ -16,9 +16,11 @@ https://stackoverflow.com/questions/31162438/how-can-i-build-rust-code-with-a-c-
 
 Troubles that I ran into:
 1. when the Rust plugin was built as a shared library. Difference in struct definition (caused by the flags provided to cmake) when compiling the shared library and the fluent-bit executable causes problem. The symptom often manifests as weirdly-long address when a pointer is printed out + null pointer.
-2. static library can have declared but undefined symbols: https://www.geeksforgeeks.org/understanding-extern-keyword-in-c/. So the apparent cyclic dependency between a plugin and fluent-bit-static library is not needed when building a Rust plugin
-3. Integrating external project into an existing C/C++ project that uses cmake.
-4. The way fluent-bit "registers" plugins is inherently unsafe (i.e. globally mutable struct variables), which causes a lot of trouble when wrangling with the Rust compiler
-5. Right now the registration structure in Rust looks pretty ugly and lengthy.
+2. when the Rust plugin was built as a shared library, it needs fluent-bit-static because every needs to be resolved at link time in order to produce the final .so file. So when calling flb_output_return_non_inline, it references the global flb_thread_key variable in the static library instead of the one set by the fluent-bit executable when it starts up. This means that
+when the Rust plugin tried to retrieve the thread-specific data (i.e. the task variable) using pthread_getspecific, it always got back some invalid blob of memory.
+3. static library can have declared but undefined symbols: https://www.geeksforgeeks.org/understanding-extern-keyword-in-c/. So the apparent cyclic dependency between a plugin and fluent-bit-static library is not needed when building a Rust plugin
+4. Integrating external project into an existing C/C++ project that uses cmake.
+5. The way fluent-bit "registers" plugins is inherently unsafe (i.e. globally mutable struct variables), which causes a lot of trouble when wrangling with the Rust compiler
+6. Right now the registration structure in Rust looks pretty ugly and lengthy.
 
 unsafe super power: https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html
