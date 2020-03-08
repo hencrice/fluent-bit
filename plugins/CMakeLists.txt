@@ -144,19 +144,26 @@ macro(FLB_RUST_PLUGIN plugin_name)
   message(STATUS, "CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
   message(STATUS, "CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
-  # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
-  add_custom_target(${plugin_name}_target
-    COMMENT "Compiling the ${plugin_name} plugin"
-    COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS fluent-bit-static msgpackc-static)
+  SET(LIB_FILE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
+  SET(LIB_HEADER_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/fluent_bit_binding)
 
+  add_custom_command(
+    OUTPUT ${LIB_FILE}
+    # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
+    COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD}
+    DEPENDS fluent-bit-static msgpackc-static
+    COMMENT "Compiling the ${plugin_name} plugin"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+  add_custom_target(${plugin_name}_target DEPENDS ${LIB_FILE})
   add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
+  add_dependencies(flb-plugin-${plugin_name} ${plugin_name}_target)
+
   set_target_properties(flb-plugin-${plugin_name}
     PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${plugin_name}.a)
+    IMPORTED_LOCATION ${LIB_FILE}
+    INTERFACE_INCLUDE_DIRECTORIES ${LIB_HEADER_FOLDER})
   add_sanitizers(flb-plugin-${plugin_name})
-  add_dependencies(flb-plugin-${plugin_name} ${plugin_name}_target)
 endmacro()
 
 
