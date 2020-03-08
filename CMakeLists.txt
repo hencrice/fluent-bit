@@ -696,7 +696,7 @@ macro(FLB_RUST_PLUGIN crate_name)
 
   # https://mirkokiefer.com/cmake-by-example-f95eb47d45b1
   ExternalProject_Add(
-    ${crate_name}
+    flb-plugin-${crate_name}
     DEPENDS fluent-bit-static msgpackc-static
     DOWNLOAD_COMMAND ""
     CONFIGURE_COMMAND ""
@@ -707,19 +707,24 @@ macro(FLB_RUST_PLUGIN crate_name)
     INSTALL_COMMAND ""
     LOG_BUILD ON
     LOG_OUTPUT_ON_FAILURE ON)
-  add_sanitizers(${crate_name})
+  add_sanitizers(flb-plugin-${crate_name})
 
-  add_test(NAME ${crate_name}_test 
+  add_test(NAME flb-plugin-${crate_name}_test 
     COMMAND BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/plugins/${crate_name}")
   
-  SET(ARCHIVE_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/debug/lib${crate_name}.a)
-  SET(ARCHIVE_OPTIMIZED ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/release/lib${crate_name}.a)
-  add_dependencies(fluent-bit-bin ${crate_name})
-  target_link_libraries(fluent-bit-bin
-    debug ${ARCHIVE_DEBUG}
-    optimized ${ARCHIVE_OPTIMIZED}
-  )
+  add_dependencies(fluent-bit-bin flb-plugin-${crate_name})
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    SET(ARCHIVE_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/debug/libflb-plugin-${crate_name}.a)
+    target_link_libraries(fluent-bit-bin
+      debug ${ARCHIVE_DEBUG}
+    )
+  else ()
+    SET(ARCHIVE_OPTIMIZED ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/release/libflb-plugin-${crate_name}.a)
+    target_link_libraries(fluent-bit-bin
+      optimized ${ARCHIVE_OPTIMIZED}
+    )
+  endif ()
 endmacro()
 
 # Add Rust plugins here
