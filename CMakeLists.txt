@@ -668,11 +668,11 @@ add_subdirectory(src)
 # https://stackoverflow.com/questions/31162438/how-can-i-build-rust-code-with-a-c-qt-cmake-project
 macro(FLB_RUST_PLUGIN crate_name)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-      set(CARGO_CMD cargo build -vv)
+      set(CARGO_CMD cargo build)
   else ()
       # TODO: Switch to use release build
-      # set(CARGO_CMD cargo build -vv --release)
-      set(CARGO_CMD cargo build -vv)
+      # set(CARGO_CMD cargo build --release)
+      set(CARGO_CMD cargo build)
   endif ()
 
   include(ExternalProject)
