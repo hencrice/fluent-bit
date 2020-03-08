@@ -37,7 +37,7 @@ macro(REGISTER_IN_PLUGIN name)
 endmacro()
 
 # REGISTER_OUT_PLUGIN
-macro(REGISTER_OUT_PLUGIN name)
+macro(REGISTER_OUT_PLUGIN name in_rust)
   string(FIND ${name} "=" pos)
   if(pos GREATER -1)
     string(REPLACE "=" ";" list ${name})
@@ -62,7 +62,9 @@ macro(REGISTER_OUT_PLUGIN name)
     set(C_CODE "${C_CODE}    mk_list_add(&out->_head, &config->out_plugins);\n\n")
 
     set(FLB_OUT_PLUGINS_ADD "${FLB_OUT_PLUGINS_ADD}${C_CODE}")
-    if (p_path)
+    if (in_rust)
+      message(STATUS "Skip the Rust plugin ${name} for now because the FLB_RUST_PLUGIN macro can not be defined beforehand. It will be added later in the top-level CMakeLists.txt.")
+    elseif (p_path)
       add_subdirectory(${p_path} ${p_path})
     else()
       add_subdirectory(${p_name})
@@ -111,56 +113,6 @@ macro(FLB_PLUGIN name src deps)
   add_library(flb-plugin-${name} STATIC ${src})
   add_sanitizers(flb-plugin-${name})
   target_link_libraries(flb-plugin-${name} fluent-bit-static msgpackc-static ${deps})
-endmacro()
-
-# Build a Rust create as part of the fluent-bit-static library (to be linked into
-# the final fluent-bit executable)
-# https://stackoverflow.com/questions/31162438/how-can-i-build-rust-code-with-a-c-qt-cmake-project
-macro(FLB_RUST_PLUGIN crate_name)
-  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-      set(CARGO_CMD cargo build -vv)
-  else ()
-      # TODO: Switch to use release build
-      # set(CARGO_CMD cargo build -vv --release)
-      set(CARGO_CMD cargo build -vv)
-  endif ()
-
-  include(ExternalProject)
-  # Set default ExternalProject root directory
-  set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/Rust)
-
-  # https://stackoverflow.com/questions/47475731/cmake-include-directories-for-custom-target-type 
-  get_directory_property(dirs INCLUDE_DIRECTORIES)
-  set(bindgen_includes "")
-  foreach(dir IN LISTS dirs)
-      set(bindgen_includes ${bindgen_includes} -I${dir})
-  endforeach()
-  # bindgen_includes is a ";" seperated list in the form of a string
-  # so replace all ; with " ", otherwise when we pass the bindgen_includes
-  # variable to the CARGO_CMD below, bash will interpret the ";" character as
-  # the end of COMMAND, which is incorrect.
-  string(REPLACE ";" " " bindgen_includes "${bindgen_includes}")
-  message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
-  message(STATUS, "CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
-  message(STATUS, "CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-
-  # https://mirkokiefer.com/cmake-by-example-f95eb47d45b1
-  ExternalProject_Add(
-    ${crate_name}
-    DOWNLOAD_COMMAND ""
-    CONFIGURE_COMMAND ""
-    # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
-    BUILD_COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD}
-    TEST_COMMAND "cargo test"
-    INSTALL_COMMAND ""
-    LOG_BUILD ON)
-
-  SET(LIB_FILE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/lib${crate_name}.a)
-  add_library(flb-plugin-${crate_name} STATIC IMPORTED)
-  set_property(TARGET flb-plugin-${crate_name} PROPERTY IMPORTED_LOCATION ${LIB_FILE})
-  add_dependencies(flb-plugin-${crate_name} ${crate_name})
-  add_sanitizers(flb-plugin-${crate_name})
-  target_link_libraries(${crate_name} fluent-bit-static msgpackc-static)
 endmacro()
 
 # ======================
