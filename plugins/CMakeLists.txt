@@ -151,18 +151,17 @@ macro(FLB_RUST_PLUGIN plugin_name)
     OUTPUT ${LIB_FILE}
     # https://stackoverflow.com/questions/35029277/how-to-modify-environment-variables-passed-to-custom-cmake-target
     COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} CMAKE_ARCHIVE_OUTPUT_DIRECTORY=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} CMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CARGO_CMD}
-    DEPENDS fluent-bit-static msgpackc-static
     COMMENT "Compiling the flb-plugin-${plugin_name} plugin"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
   add_custom_target(flb-plugin-${plugin_name} DEPENDS ${LIB_FILE})
-  add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
-
   set_target_properties(flb-plugin-${plugin_name}
     PROPERTIES
     IMPORTED_LOCATION ${LIB_FILE}
     INTERFACE_INCLUDE_DIRECTORIES ${LIB_HEADER_FOLDER})
+  add_library(flb-plugin-${plugin_name} STATIC IMPORTED GLOBAL)
   add_sanitizers(flb-plugin-${plugin_name})
+  target_link_libraries(flb-plugin-${plugin_name} fluent-bit-static msgpackc-static ${deps})
 endmacro()
 
 
