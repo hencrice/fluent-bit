@@ -189,57 +189,6 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
         cb_exit: Some(plugin_exit),
     };
 
-#[repr(C)]
-#[derive(Debug)]
-pub struct sss {
-    /*
-     * configuration properties: incoming properties set by the caller. This
-     * list is what the instance received by either a configuration file or
-     * through the command line arguments. This list is validated by the
-     * plugin.
-     */
-    pub properties: rust_binding::mk_list,
-
-    /*
-     * configuration map: a new API is landing on Fluent Bit v1.4 that allows
-     * plugins to specify at registration time the allowed configuration
-     * properties and it data types. Config map is an optional API for now
-     * and some plugins will take advantage of it. When the API is used, the
-     * config map will validate the configuration, set default values
-     * and merge the 'properties' (above) into the map.
-     */
-    pub config_map: *mut rust_binding::mk_list,
-    // struct mk_list _head;                /* link to config->inputs       */
-
-    /* Keep a reference to the original context this instance belongs to */
-    // struct flb_config *config;
-}
-
-#[no_mangle]
-extern "C" fn rust_checkit(
-    ins: *mut rust_binding::flb_output_instance,
-    config: *mut rust_binding::flb_config,
-    data: *mut c_void,
-    ins_config_map: *mut rust_binding::mk_list,
-    p_config_map: *mut rust_binding::mk_list,
-    ss: *mut sss,
-) {
-    unsafe {
-        eprintln!("rust_checkit ins.config_map: {:?}", (*ins).config_map);
-        eprintln!(
-            "rust_checkit (*ins).properties.prev: {:?}",
-            (*ins).properties.prev
-        );
-        eprintln!(
-            "rust_checkit (*ins).properties.next: {:?}",
-            (*ins).properties.next
-        );
-        eprintln!("rust_checkit ins_config_map: {:?}", ins_config_map);
-        eprintln!("rust_checkit p_config_map: {:?}", p_config_map);
-        eprintln!("rust_checkit ss: {:?}", *ss);
-    }
-}
-
 #[no_mangle]
 extern "C" fn plugin_init(
     ins: *mut rust_binding::flb_output_instance,
