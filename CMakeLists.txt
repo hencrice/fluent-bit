@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0079 NEW)
 project(fluent-bit)
 
 # Fluent Bit Version

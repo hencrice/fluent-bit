@@ -48,6 +48,8 @@ macro(REGISTER_OUT_PLUGIN name in_rust)
     set(p_name ${name})
   endif()
 
+  message(STATUS "1 Skip the Rust plugin ${name} ${in_rust}")
+
   string(TOUPPER ${p_name} NAME)
   if(FLB_${NAME} OR p_path)
     set(FLB_OUT_PLUGINS_DECL "${FLB_OUT_PLUGINS_DECL}extern struct flb_output_plugin ${p_name}_plugin;\n")
@@ -193,7 +195,7 @@ REGISTER_OUT_PLUGIN("out_td" "NO")
 REGISTER_OUT_PLUGIN("out_lib" "NO")
 REGISTER_OUT_PLUGIN("out_flowcounter" "NO")
 REGISTER_OUT_PLUGIN("out_gelf" "NO")
-#REGISTER_OUT_PLUGIN("out_rust_stdout" "YES")
+REGISTER_OUT_PLUGIN("out_rust_stdout" "YES")
 
 # FILTERS
 # =======
