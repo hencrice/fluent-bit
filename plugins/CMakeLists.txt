@@ -193,7 +193,7 @@ REGISTER_OUT_PLUGIN("out_td" "NO")
 REGISTER_OUT_PLUGIN("out_lib" "NO")
 REGISTER_OUT_PLUGIN("out_flowcounter" "NO")
 REGISTER_OUT_PLUGIN("out_gelf" "NO")
-REGISTER_OUT_PLUGIN("out_rust_stdout" "YES")
+#REGISTER_OUT_PLUGIN("out_rust_stdout" "YES")
 
 # FILTERS
 # =======
