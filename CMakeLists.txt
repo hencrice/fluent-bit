@@ -691,8 +691,6 @@ macro(FLB_RUST_PLUGIN crate_name)
   # the end of COMMAND, which is incorrect.
   string(REPLACE ";" " " bindgen_includes "${bindgen_includes}")
   message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
-  message(STATUS, "CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
-  message(STATUS, "CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
   # https://mirkokiefer.com/cmake-by-example-f95eb47d45b1
   ExternalProject_Add(
@@ -703,6 +701,7 @@ macro(FLB_RUST_PLUGIN crate_name)
     # https://cmake.org/pipermail/cmake/2012-July/051135.html
     BUILD_COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} ${CARGO_CMD}
     BINARY_DIR "${CMAKE_SOURCE_DIR}/plugins/${crate_name}"
+    TEST_COMMAND ${CMAKE_COMMAND} -E env BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test
     INSTALL_COMMAND ""
     LOG_BUILD ON
     LOG_OUTPUT_ON_FAILURE ON)
@@ -715,12 +714,14 @@ macro(FLB_RUST_PLUGIN crate_name)
   add_library(flb-plugin-${crate_name} STATIC IMPORTED GLOBAL)
   add_dependencies(flb-plugin-${crate_name} flb-plugin-${crate_name}_target)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET(ARCHIVE_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/debug/libflb_plugin_${crate_name}.a)
+    set(ARCHIVE_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/debug/libflb_plugin_${crate_name}.a)
+    message(STATUS, "fluent-bit-bin will linked with ${ARCHIVE_DEBUG}") 
     set_target_properties(flb-plugin-${crate_name}
       PROPERTIES
       IMPORTED_LOCATION ${ARCHIVE_DEBUG})
   else ()
-    SET(ARCHIVE_OPTIMIZED ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/release/libflb_plugin_${crate_name}.a)
+    set(ARCHIVE_OPTIMIZED ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/release/libflb_plugin_${crate_name}.a)
+    message(STATUS, "fluent-bit-bin will linked with ${ARCHIVE_OPTIMIZED}") 
     set_target_properties(flb-plugin-${crate_name}
       PROPERTIES
       IMPORTED_LOCATION ${ARCHIVE_OPTIMIZED})
