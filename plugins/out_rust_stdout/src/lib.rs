@@ -1,11 +1,20 @@
 extern crate rmp_serde as rmps;
 extern crate serde;
 
-use std::collections::HashMap;
-use std::ffi::c_void;
-use std::mem;
-use std::os::raw::{c_char, c_int};
-use std::ptr;
+use {
+    std::{
+        collections::HashMap,
+        ffi::c_void,
+        future::Future,
+        mem,
+        os::raw::{c_char, c_int},
+        pin::Pin,
+        ptr,
+        task::{Context, Poll},
+        thread,
+        time,
+    },
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -272,12 +281,108 @@ struct Record {
     record: HashMap<String, String>,
 }
 
-// #[derive(Debug, PartialEq, Deserialize, Serialize)]
-// struct CPURecord {
-//     cpu_p: f32,
-//     user_p: f32,
-//     system_p: f32,
-// }
+async fn delay_str() -> u8 {
+    let ten_sec = time::Duration::from_secs(10);
+    thread::sleep(ten_sec);
+    10
+}
+
+// Process Todo with fluen-bit's internal I/O stack
+pub struct FlbIOFuture<Todo> {
+    // completed: Arc<Mutex<bool>,
+    todo: Option<Todo>,
+}
+
+impl <Todo> FlbIOFuture {
+    pub fn new(todo: Todo) -> Self {
+        FlbIOFuture{
+            todo: todo,
+        }
+    }
+}
+
+// https://github.com/FSMaxB/rust-either-future/blob/master/src/lib.rs
+impl<Todo, TodoOutputType> Future for FlbIOFuture<Todo>
+where
+    Todo: Future<Output=TodoOutputType>
+{
+    type Output = TodoOutputType;
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        // Attempt to complete future `todo`
+        match &mut self.todo {
+            Some(todo) = > {
+                todo.poll(cx) match {
+                    Poll::Ready(todoOutcome) => Poll::Ready(todoOutcome),
+                    Poll::Pending => {
+                        // register call back
+                        Poll::Pending
+                    },
+                }
+            },
+            None => {
+
+                // return a value of TodoOutputType
+            }
+        }
+        if let Some(todo) = &mut  {
+            if let Poll::Ready(value) = todo.poll(cx) {
+                Poll::Ready(value)
+            }
+        }
+    }
+}
+
+impl SimpleFuture for SocketRead<'_> {
+    type Output = Vec<u8>;
+
+    fn poll(&mut self, wake: fn()) -> Poll<Self::Output> {
+        if self.socket.has_data_to_read() {
+            // The socket has data-- read it into a buffer and return it.
+            Poll::Ready(self.socket.read_buf())
+        } else {
+            // The socket does not yet have data.
+            //
+            // Arrange for `wake` to be called once data is available.
+            // When data becomes available, `wake` will be called, and the
+            // user of this `Future` will know to call `poll` again and
+            // receive data.
+            self.socket.set_readable_callback(wake);
+            Poll::Pending
+        }
+    }
+}
+
+impl<FutureA, FutureB> SimpleFuture for Join<FutureA, FutureB>
+where
+    FutureA: SimpleFuture<Output = ()>,
+    FutureB: SimpleFuture<Output = ()>,
+{
+    type Output = ();
+    fn poll(&mut self, wake: fn()) -> Poll<Self::Output> {
+        // Attempt to complete future `a`.
+        if let Some(a) = &mut self.a {
+            if let Poll::Ready(()) = a.poll(wake) {
+                self.a.take();
+            }
+        }
+
+        // Attempt to complete future `b`.
+        if let Some(b) = &mut self.b {
+            if let Poll::Ready(()) = b.poll(wake) {
+                self.b.take();
+            }
+        }
+
+        if self.a.is_none() && self.b.is_none() {
+            // Both futures have completed-- we can return successfully
+            Poll::Ready(())
+        } else {
+            // One or both futures returned `Poll::Pending` and still have
+            // work to do. They will call `wake()` when progress can be made.
+            Poll::Pending
+        }
+    }
+}
 
 #[no_mangle]
 extern "C" fn plugin_flush(
