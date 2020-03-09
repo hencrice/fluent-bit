@@ -189,6 +189,14 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
         cb_exit: Some(plugin_exit),
     };
 
+#[repr(C)]
+pub struct flb_rust_stdout {
+    pub out_format: ::std::os::raw::c_int,
+    pub json_date_format: ::std::os::raw::c_int,
+    pub json_date_key: flb_sds_t,
+    pub ins: *mut flb_output_instance,
+}
+
 #[no_mangle]
 extern "C" fn plugin_init(
     ins: *mut rust_binding::flb_output_instance,
@@ -198,7 +206,7 @@ extern "C" fn plugin_init(
     unsafe {
         eprintln!("rust_plugin_init ins.config_map: {:?}", (*ins).config_map);
         // https://medium.com/thinkthenrant/rust-tidbits-mut-mut-let-mut-let-mut-oh-my-ede02aa07eb6
-        let mut ctx = mem::zeroed::<rust_binding::flb_rust_stdout>();
+        let mut ctx = mem::zeroed::<flb_rust_stdout>();
         ctx.ins = ins;
         // https://doc.rust-lang.org/std/ffi/enum.c_void.html
         // https://stackoverflow.com/questions/24191249/working-with-c-void-in-an-ffi
@@ -271,13 +279,6 @@ struct Record {
     timestamp: u32,
     record: HashMap<String, String>,
 }
-
-// #[derive(Debug, PartialEq, Deserialize, Serialize)]
-// struct CPURecord {
-//     cpu_p: f32,
-//     user_p: f32,
-//     system_p: f32,
-// }
 
 #[no_mangle]
 extern "C" fn plugin_flush(
