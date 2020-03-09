@@ -701,8 +701,7 @@ macro(FLB_RUST_PLUGIN crate_name)
     BUILD_COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} ${CARGO_CMD}
     BINARY_DIR "${CMAKE_SOURCE_DIR}/plugins/${crate_name}"
     # https://cmake.org/pipermail/cmake/2012-July/051135.html
-    # run cargo test on the rust-binding crate ane the plugin create ${crate_name}. For now this might
-    # end up running the rust-binding crate multiple times but that should be fine.
+    # run cargo test on the rust-binding crate ane the plugin create ${crate_name}.
     TEST_COMMAND ${CMAKE_COMMAND} -E env BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test --manifest-path "${CMAKE_SOURCE_DIR}/plugins/rust_binding/Cargo.toml" COMMAND cargo test
     INSTALL_COMMAND ""
     LOG_BUILD ON
