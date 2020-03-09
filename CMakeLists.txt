@@ -692,7 +692,6 @@ macro(FLB_RUST_PLUGIN crate_name)
   string(REPLACE ";" " " bindgen_includes "${bindgen_includes}")
   message(STATUS, "Rust bindgen_includes: ${bindgen_includes}")
 
-  # https://mirkokiefer.com/cmake-by-example-f95eb47d45b1
   ExternalProject_Add(
     flb-plugin-${crate_name}_target
     DOWNLOAD_COMMAND ""
@@ -701,15 +700,14 @@ macro(FLB_RUST_PLUGIN crate_name)
     # https://cmake.org/pipermail/cmake/2012-July/051135.html
     BUILD_COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} BINDGEN_HEADER_DIRS=${bindgen_includes} ${CARGO_CMD}
     BINARY_DIR "${CMAKE_SOURCE_DIR}/plugins/${crate_name}"
-    TEST_COMMAND ${CMAKE_COMMAND} -E env BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test
+    # https://cmake.org/pipermail/cmake/2012-July/051135.html
+    # run cargo test on the rust-binding crate ane the plugin create ${crate_name}. For now this might
+    # end up running the rust-binding crate multiple times but that should be fine.
+    TEST_COMMAND ${CMAKE_COMMAND} -E env BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test --manifest-path "${CMAKE_SOURCE_DIR}/plugins/rust_binding/Cargo.toml" COMMAND cargo test
     INSTALL_COMMAND ""
     LOG_BUILD ON
     LOG_OUTPUT_ON_FAILURE ON)
   add_sanitizers(flb-plugin-${crate_name}_target)
-
-  #add_test(NAME flb-plugin-${crate_name}_target_test 
-  #  COMMAND BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test
-  #  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/plugins/${crate_name}")
 
   add_library(flb-plugin-${crate_name} STATIC IMPORTED GLOBAL)
   add_dependencies(flb-plugin-${crate_name} flb-plugin-${crate_name}_target)
