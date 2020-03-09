@@ -702,7 +702,7 @@ macro(FLB_RUST_PLUGIN crate_name)
     BINARY_DIR "${CMAKE_SOURCE_DIR}/plugins/${crate_name}"
     # https://cmake.org/pipermail/cmake/2012-July/051135.html
     # run cargo test on the rust-binding crate ane the plugin create ${crate_name}.
-    TEST_COMMAND ${CMAKE_COMMAND} -E env BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test --library --manifest-path "${CMAKE_SOURCE_DIR}/plugins/rust_binding/Cargo.toml" COMMAND cargo test
+    TEST_COMMAND ${CMAKE_COMMAND} -E env BINDGEN_HEADER_DIRS=${bindgen_includes} cargo test --lib --manifest-path "${CMAKE_SOURCE_DIR}/plugins/rust_binding/Cargo.toml" COMMAND cargo test
     INSTALL_COMMAND ""
     LOG_BUILD ON
     LOG_OUTPUT_ON_FAILURE ON)
