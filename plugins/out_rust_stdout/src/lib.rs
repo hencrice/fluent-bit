@@ -1,27 +1,30 @@
 extern crate rmp_serde as rmps;
 extern crate serde;
 extern crate rand;
+extern crate futures;
 
 use {
     std::{
         collections::HashMap,
         error,
         ffi::c_void,
+        fmt,
         future::Future,
         mem,
         os::raw::{c_char, c_int},
-        pin::Pin,
         ptr,
-        task::{Context, Poll},
-        thread,
+        sync::Arc,
+        task::Context,
         time,
     },
+}
 
-    futures::task::{ArcWake, waker_ref},
+use {
     async_std::task,
+    futures::task::{ArcWake, waker_ref},
+    rand::Rng,
+    serde::{Deserialize, Serialize},
 };
-
-use serde::{Deserialize, Serialize};
 
 use rust_binding;
 
@@ -312,7 +315,7 @@ impl ArcWake for NoOp {
 
 #[derive(Debug, Clone)]
 struct CCallNonZeroError {
-    errorCode: int,
+    errorCode: c_int,
 }
 
 impl fmt::Display for CCallNonZeroError {
@@ -371,7 +374,7 @@ pub fn ExecuteFuture<T>(todo: &mut Future<T>, config: *mut rust_binding::flb_con
     };
 
     loop {
-        todo.poll(ctx) match {
+        match todo.poll(ctx) {
             Poll::Ready(todoOutcome) => break Ok(todoOutcome),
             Poll::Pending => {
                 // register a callback by mk_event_add()
@@ -458,7 +461,7 @@ extern "C" fn plugin_flush(
     }
 
     let fut = delay_rand_u8();
-    let result = ExecuteFuture(&mut fut, config)
+    let result = ExecuteFuture(&mut fut, config);
     match result {
         Ok(v) => eprintln!("delay random number: {:?}", v),
         Err(e) => eprintln!("ExecuteFuture error: {:?}", e),
