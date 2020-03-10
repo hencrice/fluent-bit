@@ -352,7 +352,7 @@ extern "C" fn event_handler(
 // https://boats.gitlab.io/blog/post/wakers-i/
 pub <TodoOutputType> fn ExecuteFuture(todo: &mut Future<TodoOutputType>, config: *mut rust_binding::flb_config) -> Result<TodoOutputType, CCallNonZeroError> {
     // https://www.reddit.com/r/rust/comments/cfvmj6/is_a_contextwaker_really_required_for_polling_a/
-    let task = NoOp{};
+    let task = NoOp;
     let waker = waker_ref(&task);
     let ctx = &mut Context::from_waker(&*waker);
 
