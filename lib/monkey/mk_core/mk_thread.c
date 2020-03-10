@@ -345,3 +345,8 @@ void mk_thread_add_channel(int id, struct mk_thread_channel *chan)
     dt = sch->dt[id];
     mk_list_add(&chan->_head, &dt->chan_list);
 }
+
+struct flb_thread * flb_get_pthread() {
+    struct flb_thread *th = pthread_getspecific(flb_thread_key);
+    return th;
+}

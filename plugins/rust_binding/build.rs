@@ -21,6 +21,7 @@ fn main() {
         .whitelist_function("flb_config_map_set")
         .whitelist_function("flb_output_set_context")
         .whitelist_function("flb_output_return_non_inline")
+        .whitelist_function("flb_get_pthread")
         .whitelist_type("flb_input_instance")
         .whitelist_type("flb_filter_instance")
         .whitelist_type("flb_output_instance")
