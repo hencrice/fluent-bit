@@ -299,7 +299,7 @@ async fn delay_rand_u8() -> u8 {
 
 // A future that can reschedule itself to be polled by an `Executor`
 // (in fleunt-bit's case, it's the event loop in the fluent-bit core).
-struct NoOp {}
+struct NoOp{};
 
 impl ArcWake for NoOp {
     // Wakers are responsible for scheduling a task to be polled again
@@ -416,7 +416,7 @@ pub <TodoOutputType> fn ExecuteFuture(todo: &mut Future<TodoOutputType>, config:
                     }
                 }
             },
-        }        
+        } 
     }
 }
 
