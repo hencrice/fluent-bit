@@ -17,10 +17,7 @@ use {
         time,
     },
 
-    futures::{
-        future::{FutureExt, BoxFuture},
-        task::{ArcWake, waker_ref},
-    },
+    futures::task::{ArcWake, waker_ref},
 };
 
 use serde::{Deserialize, Serialize};
