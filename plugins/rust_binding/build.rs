@@ -22,9 +22,13 @@ fn main() {
         .whitelist_function("flb_output_set_context")
         .whitelist_function("flb_output_return_non_inline")
         .whitelist_function("flb_get_pthread")
+        .whitelist_function("mk_event_add")
+        .whitelist_function("flb_thread_yield_non_inline")
+        .whitelist_function("flb_thread_resume_non_inline")
         .whitelist_type("flb_input_instance")
         .whitelist_type("flb_filter_instance")
         .whitelist_type("flb_output_instance")
+        .whitelist_type("flb_thread")
         .derive_debug(true)
         // blacklist the following 3 so that bindgen
         // does not generate another type with the

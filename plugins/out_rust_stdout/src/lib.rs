@@ -1,9 +1,11 @@
 extern crate rmp_serde as rmps;
 extern crate serde;
+extern crate rand;
 
 use {
     std::{
         collections::HashMap,
+        error,
         ffi::c_void,
         future::Future,
         mem,
@@ -126,7 +128,7 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
                 set_property: 1,
                 // calculate offset same as https://github.com/fluent/fluent-bit/blob/e6506b7b5364c77bec186d94e51c4b3b51e6fbac/plugins/out_stdout/stdout.c#L171
                 // https://crates.io/crates/memoffset
-                // TODO: need to figure out how to do this because
+                // TODO: need to figure out how to do this
                 offset: 20,
                 desc: ptr::null(),
                 value: rust_binding::flb_config_map_val {
@@ -211,13 +213,14 @@ extern "C" fn plugin_init(
 ) -> c_int {
     unsafe {
         eprintln!("rust_plugin_init ins.config_map: {:?}", (*ins).config_map);
-        // https://medium.com/thinkthenrant/rust-tidbits-mut-mut-let-mut-let-mut-oh-my-ede02aa07eb6
-        let mut ctx = mem::zeroed::<rust_binding::flb_rust_stdout>();
-        ctx.ins = ins;
+        // TODO: 
+        // https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
+        let mut ctx = Box::new(mem::zeroed::<rust_binding::flb_rust_stdout>());
+        *ctx.ins = ins;
         // https://doc.rust-lang.org/std/ffi/enum.c_void.html
         // https://stackoverflow.com/questions/24191249/working-with-c-void-in-an-ffi
         // https://users.rust-lang.org/t/semantics-of-mut--/5514
-        let ctx_ptr: *mut c_void = &mut ctx as *mut _ as *mut c_void;
+        let ctx_ptr: *mut c_void = &mut *ctx as *mut _ as *mut c_void;
         // https://github.com/rust-lang/rust/issues/61820
         // https://stackoverflow.com/questions/17081131/how-can-a-shared-library-so-call-a-function-that-is-implemented-in-its-loadin
         // https://stackoverflow.com/questions/36692315/what-exactly-does-rdynamic-do-and-when-exactly-is-it-needed
@@ -286,124 +289,135 @@ struct Record {
     record: HashMap<String, String>,
 }
 
-async fn delay_str() -> u8 {
+async fn delay_u8() -> u8 {
     let ten_sec = time::Duration::from_secs(10);
     thread::sleep(ten_sec);
-    10
+    let mut rng = rand::thread_rng();
+    let n: u8 = rng.gen();
+    eprintln!("delay_u8 called {}", n);
+    n
 }
 
-struct FlbEventSender {
+// A future that can reschedule itself to be polled by an `Executor`
+// (in fleunt-bit's case, it's the event loop in the fluent-bit core).
+struct NoOp {}
 
+impl ArcWake for NoOp {
+    // Wakers are responsible for scheduling a task to be polled again
+    // once wake is called (). However, in fluen-bit's case, which uses libco,
+    // I believe there's no mechanism to notify the core event loop that some
+    // async operation is ready to continue, so we just do nothing here and
+    // rely on the core event loop to reschedule us.
+    fn wake_by_ref(arc_self: &Arc<Self>) {}
 }
 
-/// A future that can reschedule itself to be polled by an `Executor`.
-struct Task<T> {
-    /// In-progress future that should be pushed to completion.
-    ///
-    /// The `Mutex` is not necessary for correctness, since we only have
-    /// one thread executing tasks at once. However, Rust isn't smart
-    /// enough to know that `future` is only mutated from one thread,
-    /// so we need use the `Mutex` to prove thread-safety. A production
-    /// executor would not need this, and could use `UnsafeCell` instead.
-    future: Mutex<Option<BoxFuture<'static, T>>>,
+#[derive(Debug, Clone)]
+struct CCallNonZeroError {
+    errorCode: int,
+};
 
-    /// Handle to place the task itself back onto the task queue.
-    task_sender: fn(<Arc<Task>>)
-}
-
-impl ArcWake for Task {
-    fn wake_by_ref(arc_self: &Arc<Self>) {
-        // Implement `wake` by sending this task back onto the task channel
-        // so that it will be polled again by the executor.
-        let cloned = arc_self.clone();
-
-        arc_self.task_sender.send(cloned).expect("too many tasks queued");
+impl fmt::Display for CCallNonZeroError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "call to C returns non-zero code: {}", self.errorCode);
     }
 }
 
-// pub struct mk_event {
-//     pub fd: ::std::os::raw::c_int,
-//     pub type_: ::std::os::raw::c_int,
-//     pub mask: u32,
-//     pub status: u8,
-//     pub data: *mut ::std::os::raw::c_void,
-//     pub handler: ::std::option::Option<
-//         unsafe extern "C" fn(data: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int,
-//     >,
-//     pub _head: mk_list,
-// }
+// This is important for other errors to wrap this one.
+impl error::Error for CCallNonZeroError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        // Generic error, underlying cause isn't tracked.
+        None
+    }
+}
+
+#[no_mangle]
+extern "C" fn event_handler(
+    data: *const c_void,
+) -> c_int {
+    // There are a few examples on whether we need to free the incoming data
+    // and whether it should be a *const of *mut:
+    // mqtt_conn_event in mqtt_conn.c
+    // tcp_conn_event in tcp_conn.c
+    // syslog_conn_event in syslog_conn.c
+
+    // This is pretty much the same as how FLB_ENGINE_EV_THREAD is handled
+    // in flb_engine.c
+    // cast incoming data as mk_event, then cast the data field as a pointer
+    let event: &rust_binding::mk_event = unsafe { & *(data as *mut rust_binding::mk_event) };
+    let th: *mut rust_binding::flb_thread = unsafe { &mut *(event.data as *mut rust_binding::flb_thread) };
+    rust_binding::flb_thread_resume_non_inline(th);
+    0
+}
 
 // https://rust-lang.github.io/async-book/02_execution/04_executor.html
-// https://www.reddit.com/r/rust/comments/anu8w4/futures_03_how_does_waker_and_executor_connect/
-pub <TodoOutputType> DoFuture(todo: &mut Future<TodoOutputType>, config: *mut rust_binding::flb_config) -> TodoOutputType {
-    // create cx somehow
-    while true {
-        todo.poll(cx) match {
-            Poll::Ready(todoOutcome) => return todoOutcome,
+// https://boats.gitlab.io/blog/post/wakers-i/
+pub <TodoOutputType> fn ExecuteFuture(todo: &mut Future<TodoOutputType>, config: *mut rust_binding::flb_config) -> Result<TodoOutputType, > {
+    // https://www.reddit.com/r/rust/comments/cfvmj6/is_a_contextwaker_really_required_for_polling_a/
+    let task = NoOp{};
+    let waker = waker_ref(&task);
+    let ctx = &mut Context::from_waker(&*waker);
+
+    let event = rust_binding::mk_event {
+        // Basically follow MK_EVENT_INIT in mk_event.h
+        fd: -1,
+        type_: 4, // MK_EVENT_CUSTOM
+        mask: 0, // MK_EVENT_EMPTY
+        status: 1, // MK_EVENT_NONE
+        data: rust_binding::flb_get_pthread() as *mut c_void,
+        handler: Some(event_handler),
+        _head: rust_binding::mk_list {
+            prev: ptr::null_mut(),
+            next: ptr::null_mut(),
+        },
+    };
+
+    loop {
+        todo.poll(ctx) match {
+            Poll::Ready(todoOutcome) => break Ok(todoOutcome),
             Poll::Pending => {
                 // register a callback by mk_event_add()
+                
+                // extern "C" {
+                //     pub fn mk_event_add(
+                //         loop_: *mut mk_event_loop,
+                //         fd: ::std::os::raw::c_int,
+                //         type_: ::std::os::raw::c_int,
+                //         mask: u32,
+                //         data: *mut ::std::os::raw::c_void,
+                //     ) -> ::std::os::raw::c_int;
+                // }
                 rust_binding::mk_event_add(
                     config.evl, // event loop
-                    0, // we don't care about fd since we are not using socket here
+                    -1, // we don't care about fd since we are not using socket here
                     4, // FLB_ENGINE_EV_CUSTOM
-                    4, // MK_EVENT_WRITE
-                    rust_binding::mk_event {
-                        fd: 0,
-                        type_:
-                        mask: 
-                    }
+                    4, // MK_EVENT_WRITE. TODO: figure out the significance of this value
+                    // TODO: [MemoryManagement] do we need to free the following struct (and its fields) or fluent-bit C code does it?
+                    // https://stackoverflow.com/questions/38289355/drop-a-rust-void-pointer-stored-in-an-ffi
+                    // https://stackoverflow.com/questions/50107792/what-is-the-better-way-to-wrap-a-ffi-struct-that-owns-or-borrows-data
+                    // [2nd solution?] https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
+                    // Might also need to call ::std::mem::forget(obj) in case C will free this for us?
+                    &mut event as *mut _ as *mut c_void,
                 )
-                // call flb_thread_yield
-                // mk_event_del
-                // check mask: if (mask & MK_EVENT_WRITE) {
-                // 
-            },
-        }        
-    }
-}
+                
+                unsafe {
+                    rust_binding::flb_thread_yield_non_inline(rust_binding::flb_get_pthread(), 0); // FLB_FALSE == 0
+                    
+                    let mask = event.mask; // Save events mask since mk_event_del() will reset it
+                    ret = rust_binding::mk_event_del(config.evl, &mut event);
+                    if ret == -1 {
+                        break Err(CCallNonZeroError{ret});
+                    }
 
-// Process Todo with fluen-bit's internal I/O stack
-pub struct FlbIOFuture<Todo> {
-    // completed: Arc<Mutex<bool>,
-    todo: Option<Todo>,
-}
-
-impl <Todo> FlbIOFuture {
-    pub fn new(todo: Todo) -> Self {
-        FlbIOFuture{
-            todo: todo,
-        }
-    }
-}
-
-// https://github.com/FSMaxB/rust-either-future/blob/master/src/lib.rs
-impl<Todo, TodoOutputType> Future for FlbIOFuture<Todo>
-where
-    Todo: Future<Output=TodoOutputType>
-{
-    type Output = TodoOutputType;
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        // Attempt to complete future `todo`
-        match &mut self.todo {
-            Some(todo) = > {
-                todo.poll(cx) match {
-                    Poll::Ready(todoOutcome) => Poll::Ready(todoOutcome),
-                    Poll::Pending => {
-                        // register call back
-                        Poll::Pending
-                    },
+                    if (event.mask & 4) // MK_EVENT_WRITE {
+                        // same as MK_EVENT_NEW
+                        event.mask = 0; // MK_EVENT_EMPTY
+                        event.status = 1; // MK_EVENT_NONE
+                    } else {
+                        break Err(CCallNonZeroError{ret}) 
+                    }
                 }
             },
-            None => {
-
-                // return a value of TodoOutputType
-            }
-        }
-        if let Some(todo) = &mut  {
-            if let Poll::Ready(value) = todo.poll(cx) {
-                Poll::Ready(value)
-            }
-        }
+        }        
     }
 }
 
@@ -452,8 +466,11 @@ extern "C" fn plugin_flush(
 
 #[no_mangle]
 extern "C" fn plugin_exit(data: *mut c_void, config: *mut rust_binding::flb_config) -> c_int {
-    // TODO: Do we need to free the data argument just like the
+    // TODO: [MemoryManagement] Do we need to free the data argument just like the
     // C stdout output plugin?
+    // https://stackoverflow.com/questions/38289355/drop-a-rust-void-pointer-stored-in-an-ffi
+    // https://stackoverflow.com/questions/50107792/what-is-the-better-way-to-wrap-a-ffi-struct-that-owns-or-borrows-data
+    // [2nd solution?] https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
     0
 }
 
