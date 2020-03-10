@@ -18,6 +18,7 @@ use {
     },
 
     futures::task::{ArcWake, waker_ref},
+    async_std::task;
 };
 
 use serde::{Deserialize, Serialize};
@@ -286,12 +287,13 @@ struct Record {
     record: HashMap<String, String>,
 }
 
-async fn delay_u8() -> u8 {
-    let ten_sec = time::Duration::from_secs(10);
-    thread::sleep(ten_sec);
+async fn delay_rand_u8() -> u8 {
+    eprintln!("delay_rand_u8 called, before async sleep");
+    // https://blog.hwc.io/posts/rust-futures-threadsleep-and-blocking-calls-inside-async-fn/
+    task::sleep(time::Duration::from_secs(10)).await;
     let mut rng = rand::thread_rng();
     let n: u8 = rng.gen();
-    eprintln!("delay_u8 called {}", n);
+    eprintln!("delay_rand_u8 called, after async sleep {}", n);
     n
 }
 
@@ -348,7 +350,7 @@ extern "C" fn event_handler(
 
 // https://rust-lang.github.io/async-book/02_execution/04_executor.html
 // https://boats.gitlab.io/blog/post/wakers-i/
-pub <TodoOutputType> fn ExecuteFuture(todo: &mut Future<TodoOutputType>, config: *mut rust_binding::flb_config) -> Result<TodoOutputType, > {
+pub <TodoOutputType> fn ExecuteFuture(todo: &mut Future<TodoOutputType>, config: *mut rust_binding::flb_config) -> Result<TodoOutputType, CCallNonZeroError> {
     // https://www.reddit.com/r/rust/comments/cfvmj6/is_a_contextwaker_really_required_for_polling_a/
     let task = NoOp{};
     let waker = waker_ref(&task);
@@ -456,6 +458,12 @@ extern "C" fn plugin_flush(
         Err(e) => println!("err returned from msg pack: {}", e),
     }
 
+    let fut = delay_rand_u8();
+    let result = ExecuteFuture(&mut fut, config)
+    match result {
+        Ok(v) => eprintln!("delay random number: {:?}", v),
+        Err(e) => eprintln!("ExecuteFuture error: {:?}", e),
+    }
     unsafe {
         rust_binding::flb_output_return_non_inline(1);
     }

@@ -11,6 +11,7 @@ rust_binding={path="../rust_binding"}
 serde={version="~1.0", features = ["derive"]}
 rmp-serde="~0.14"
 rand="~0.7"
+async-std="~1.5"
 
 [lib]
  # Creates static lib to be liniked by the final fluent-bit executable:
