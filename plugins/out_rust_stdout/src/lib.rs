@@ -18,7 +18,7 @@ use {
     },
 
     futures::task::{ArcWake, waker_ref},
-    async_std::task;
+    async_std::task,
 };
 
 use serde::{Deserialize, Serialize};
@@ -313,7 +313,7 @@ impl ArcWake for NoOp {
 #[derive(Debug, Clone)]
 struct CCallNonZeroError {
     errorCode: int,
-};
+}
 
 impl fmt::Display for CCallNonZeroError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -350,7 +350,7 @@ extern "C" fn event_handler(
 
 // https://rust-lang.github.io/async-book/02_execution/04_executor.html
 // https://boats.gitlab.io/blog/post/wakers-i/
-pub <TodoOutputType> fn ExecuteFuture(todo: &mut Future<TodoOutputType>, config: *mut rust_binding::flb_config) -> Result<TodoOutputType, CCallNonZeroError> {
+pub fn ExecuteFuture<T>(todo: &mut Future<T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
     // https://www.reddit.com/r/rust/comments/cfvmj6/is_a_contextwaker_really_required_for_polling_a/
     let task = NoOp;
     let waker = waker_ref(&task);
