@@ -4,5 +4,5 @@
 #include <fluent-bit/flb_pack.h>
 #include <fluent-bit/flb_config_map.h>
 #include <fluent-bit/flb_thread_libco.h>
-#include <mk_core/mk_thread.h>
+#include <monkey/mk_core/mk_thread.h>
 #include <monkey/mk_core.h>
