@@ -78,9 +78,7 @@ static FLB_INLINE void flb_thread_yield(struct flb_thread *th, int ended)
     co_switch(th->caller);
 }
 
-void flb_thread_yield_non_inline(struct flb_thread *th, int ended) {
-    flb_thread_yield(th, ended);
-}
+void flb_thread_yield_non_inline(struct flb_thread *th, int ended);
 
 static FLB_INLINE void flb_thread_destroy(struct flb_thread *th)
 {
@@ -117,9 +115,7 @@ static FLB_INLINE void flb_thread_resume(struct flb_thread *th)
     co_switch(th->callee);
 }
 
-void flb_thread_resume_non_inline(struct flb_thread *th) {
-    flb_thread_resume(th);
-}
+void flb_thread_resume_non_inline(struct flb_thread *th);
 
 static FLB_INLINE struct flb_thread *flb_thread_new(size_t data_size,
                                          void (*cb_destroy) (void *))
