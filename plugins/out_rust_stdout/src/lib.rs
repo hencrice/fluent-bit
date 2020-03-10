@@ -14,6 +14,11 @@ use {
         thread,
         time,
     },
+
+    futures::{
+        future::{FutureExt, BoxFuture},
+        task::{ArcWake, waker_ref},
+    },
 };
 
 use serde::{Deserialize, Serialize};
@@ -287,6 +292,76 @@ async fn delay_str() -> u8 {
     10
 }
 
+struct FlbEventSender {
+
+}
+
+/// A future that can reschedule itself to be polled by an `Executor`.
+struct Task<T> {
+    /// In-progress future that should be pushed to completion.
+    ///
+    /// The `Mutex` is not necessary for correctness, since we only have
+    /// one thread executing tasks at once. However, Rust isn't smart
+    /// enough to know that `future` is only mutated from one thread,
+    /// so we need use the `Mutex` to prove thread-safety. A production
+    /// executor would not need this, and could use `UnsafeCell` instead.
+    future: Mutex<Option<BoxFuture<'static, T>>>,
+
+    /// Handle to place the task itself back onto the task queue.
+    task_sender: fn(<Arc<Task>>)
+}
+
+impl ArcWake for Task {
+    fn wake_by_ref(arc_self: &Arc<Self>) {
+        // Implement `wake` by sending this task back onto the task channel
+        // so that it will be polled again by the executor.
+        let cloned = arc_self.clone();
+
+        arc_self.task_sender.send(cloned).expect("too many tasks queued");
+    }
+}
+
+// pub struct mk_event {
+//     pub fd: ::std::os::raw::c_int,
+//     pub type_: ::std::os::raw::c_int,
+//     pub mask: u32,
+//     pub status: u8,
+//     pub data: *mut ::std::os::raw::c_void,
+//     pub handler: ::std::option::Option<
+//         unsafe extern "C" fn(data: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int,
+//     >,
+//     pub _head: mk_list,
+// }
+
+// https://rust-lang.github.io/async-book/02_execution/04_executor.html
+// https://www.reddit.com/r/rust/comments/anu8w4/futures_03_how_does_waker_and_executor_connect/
+pub <TodoOutputType> DoFuture(todo: &mut Future<TodoOutputType>, config: *mut rust_binding::flb_config) -> TodoOutputType {
+    // create cx somehow
+    while true {
+        todo.poll(cx) match {
+            Poll::Ready(todoOutcome) => return todoOutcome,
+            Poll::Pending => {
+                // register a callback by mk_event_add()
+                rust_binding::mk_event_add(
+                    config.evl, // event loop
+                    0, // we don't care about fd since we are not using socket here
+                    4, // FLB_ENGINE_EV_CUSTOM
+                    4, // MK_EVENT_WRITE
+                    rust_binding::mk_event {
+                        fd: 0,
+                        type_:
+                        mask: 
+                    }
+                )
+                // call flb_thread_yield
+                // mk_event_del
+                // check mask: if (mask & MK_EVENT_WRITE) {
+                // 
+            },
+        }        
+    }
+}
+
 // Process Todo with fluen-bit's internal I/O stack
 pub struct FlbIOFuture<Todo> {
     // completed: Arc<Mutex<bool>,
@@ -328,58 +403,6 @@ where
             if let Poll::Ready(value) = todo.poll(cx) {
                 Poll::Ready(value)
             }
-        }
-    }
-}
-
-impl SimpleFuture for SocketRead<'_> {
-    type Output = Vec<u8>;
-
-    fn poll(&mut self, wake: fn()) -> Poll<Self::Output> {
-        if self.socket.has_data_to_read() {
-            // The socket has data-- read it into a buffer and return it.
-            Poll::Ready(self.socket.read_buf())
-        } else {
-            // The socket does not yet have data.
-            //
-            // Arrange for `wake` to be called once data is available.
-            // When data becomes available, `wake` will be called, and the
-            // user of this `Future` will know to call `poll` again and
-            // receive data.
-            self.socket.set_readable_callback(wake);
-            Poll::Pending
-        }
-    }
-}
-
-impl<FutureA, FutureB> SimpleFuture for Join<FutureA, FutureB>
-where
-    FutureA: SimpleFuture<Output = ()>,
-    FutureB: SimpleFuture<Output = ()>,
-{
-    type Output = ();
-    fn poll(&mut self, wake: fn()) -> Poll<Self::Output> {
-        // Attempt to complete future `a`.
-        if let Some(a) = &mut self.a {
-            if let Poll::Ready(()) = a.poll(wake) {
-                self.a.take();
-            }
-        }
-
-        // Attempt to complete future `b`.
-        if let Some(b) = &mut self.b {
-            if let Poll::Ready(()) = b.poll(wake) {
-                self.b.take();
-            }
-        }
-
-        if self.a.is_none() && self.b.is_none() {
-            // Both futures have completed-- we can return successfully
-            Poll::Ready(())
-        } else {
-            // One or both futures returned `Poll::Pending` and still have
-            // work to do. They will call `wake()` when progress can be made.
-            Poll::Pending
         }
     }
 }
