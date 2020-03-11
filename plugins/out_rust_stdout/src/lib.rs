@@ -14,7 +14,7 @@ use {
         os::raw::{c_char, c_int},
         ptr,
         sync::Arc,
-        task::Context,
+        task::{Context, Poll},
         time,
     },
 };
@@ -353,7 +353,7 @@ extern "C" fn event_handler(
 
 // https://rust-lang.github.io/async-book/02_execution/04_executor.html
 // https://boats.gitlab.io/blog/post/wakers-i/
-pub fn ExecuteFuture<T>(todo: &mut Future<T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
+pub fn ExecuteFuture<T>(todo: &mut Future<Output=T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
     // https://www.reddit.com/r/rust/comments/cfvmj6/is_a_contextwaker_really_required_for_polling_a/
     let task = NoOp;
     let waker = waker_ref(&task);
@@ -405,12 +405,13 @@ pub fn ExecuteFuture<T>(todo: &mut Future<T>, config: *mut rust_binding::flb_con
                     rust_binding::flb_thread_yield_non_inline(rust_binding::flb_get_pthread(), 0); // FLB_FALSE == 0
                     
                     let mask = event.mask; // Save events mask since mk_event_del() will reset it
-                    ret = rust_binding::mk_event_del(config.evl, &mut event);
+                    let ret = rust_binding::mk_event_del(config.evl, &mut event);
                     if ret == -1 {
                         break Err(CCallNonZeroError{ret});
                     }
 
-                    if (event.mask & 4) // MK_EVENT_WRITE {
+                    // MK_EVENT_WRITE == 4
+                    if (event.mask & 4) {
                         // same as MK_EVENT_NEW
                         event.mask = 0; // MK_EVENT_EMPTY
                         event.status = 1; // MK_EVENT_NONE

@@ -23,6 +23,7 @@ fn main() {
         .whitelist_function("flb_output_return_non_inline")
         .whitelist_function("flb_get_pthread")
         .whitelist_function("mk_event_add")
+        .whitelist_function("mk_event_del")
         .whitelist_function("flb_thread_yield_non_inline")
         .whitelist_function("flb_thread_resume_non_inline")
         .whitelist_type("flb_input_instance")

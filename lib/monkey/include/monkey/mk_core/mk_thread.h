@@ -44,6 +44,4 @@ int mk_thread_running();
 
 void mk_thread_add_channel(int id, struct mk_thread_channel *chan);
 
-struct flb_thread * flb_get_pthread();
-
 #endif
