@@ -12,6 +12,7 @@ use {
         future::Future,
         mem,
         os::raw::{c_char, c_int},
+        pin::Pin,
         ptr,
         sync::Arc,
         task::{Context, Poll},
@@ -21,7 +22,10 @@ use {
 
 use {
     async_std::task,
-    futures::task::{ArcWake, waker_ref},
+    futures::{
+        future::BoxFuture,
+        task::{ArcWake, waker_ref},
+    },
     rand::Rng,
     serde::{Deserialize, Serialize},
 };
@@ -353,7 +357,7 @@ extern "C" fn event_handler(
 
 // https://rust-lang.github.io/async-book/02_execution/04_executor.html
 // https://boats.gitlab.io/blog/post/wakers-i/
-pub fn ExecuteFuture<T>(todo: &mut dyn Future<Output=T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
+pub fn ExecuteFuture<T>(mut todo: BoxFuture<T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
     // https://www.reddit.com/r/rust/comments/cfvmj6/is_a_contextwaker_really_required_for_polling_a/
     let task = Arc::new(NoOp);
     let waker = waker_ref(&task);
@@ -379,7 +383,7 @@ pub fn ExecuteFuture<T>(todo: &mut dyn Future<Output=T>, config: *mut rust_bindi
     };
 
     let result = loop {
-        match *todo.poll(ctx) {
+        match todo.as_mut().poll(ctx) {
             Poll::Ready(todoOutcome) => break Ok(todoOutcome),
             Poll::Pending => {
                 // register a callback by mk_event_add()
@@ -465,7 +469,7 @@ extern "C" fn plugin_flush(
     }
 
     let fut = delay_rand_u8();
-    let result = ExecuteFuture(&mut fut, config);
+    let result = ExecuteFuture(mut Box::pin(fut), config);
     match result {
         Ok(v) => eprintln!("delay random number: {:?}", v),
         Err(e) => eprintln!("ExecuteFuture error: {:?}", e),
