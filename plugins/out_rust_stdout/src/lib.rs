@@ -379,7 +379,7 @@ pub fn ExecuteFuture<T>(todo: &mut dyn Future<Output=T>, config: *mut rust_bindi
     };
 
     let result = loop {
-        match todo.poll(ctx) {
+        match *todo.poll(ctx) {
             Poll::Ready(todoOutcome) => break Ok(todoOutcome),
             Poll::Pending => {
                 // register a callback by mk_event_add()
@@ -407,7 +407,7 @@ pub fn ExecuteFuture<T>(todo: &mut dyn Future<Output=T>, config: *mut rust_bindi
                     let mask = event.mask; // Save events mask since mk_event_del() will reset it
                     let ret = rust_binding::mk_event_del((*config).evl, &mut event);
                     if ret == -1 {
-                        break Err(CCallNonZeroError{ret});
+                        break Err(CCallNonZeroError{errorCode: ret});
                     }
 
                     // MK_EVENT_WRITE == 4
@@ -417,7 +417,7 @@ pub fn ExecuteFuture<T>(todo: &mut dyn Future<Output=T>, config: *mut rust_bindi
                         event.status = 1; // MK_EVENT_NONE
                     } else {
                         eprintln!("eventMask is incorrect: {}", event.mask);
-                        break Err(CCallNonZeroError{-1}) 
+                        break Err(CCallNonZeroError{errorCode: -3}) 
                     }
                 }
             },
