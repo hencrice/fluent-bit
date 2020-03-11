@@ -359,6 +359,11 @@ pub fn ExecuteFuture<T>(todo: &mut Future<T>, config: *mut rust_binding::flb_con
     let waker = waker_ref(&task);
     let ctx = &mut Context::from_waker(&*waker);
 
+    // TODO: [MemoryManagement] do we need to free the following struct (and its fields) or fluent-bit C code does it?
+    // https://stackoverflow.com/questions/38289355/drop-a-rust-void-pointer-stored-in-an-ffi
+    // https://stackoverflow.com/questions/50107792/what-is-the-better-way-to-wrap-a-ffi-struct-that-owns-or-borrows-data
+    // [2nd solution?] https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
+    // Might also need to call ::std::mem::forget(obj) in case C will free this for us?
     let event = rust_binding::mk_event {
         // Basically follow MK_EVENT_INIT in mk_event.h
         fd: -1,
@@ -393,13 +398,8 @@ pub fn ExecuteFuture<T>(todo: &mut Future<T>, config: *mut rust_binding::flb_con
                     -1, // we don't care about fd since we are not using socket here
                     4, // FLB_ENGINE_EV_CUSTOM
                     4, // MK_EVENT_WRITE. TODO: figure out the significance of this value
-                    // TODO: [MemoryManagement] do we need to free the following struct (and its fields) or fluent-bit C code does it?
-                    // https://stackoverflow.com/questions/38289355/drop-a-rust-void-pointer-stored-in-an-ffi
-                    // https://stackoverflow.com/questions/50107792/what-is-the-better-way-to-wrap-a-ffi-struct-that-owns-or-borrows-data
-                    // [2nd solution?] https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
-                    // Might also need to call ::std::mem::forget(obj) in case C will free this for us?
                     &mut event as *mut _ as *mut c_void,
-                )
+                );
                 
                 unsafe {
                     rust_binding::flb_thread_yield_non_inline(rust_binding::flb_get_pthread(), 0); // FLB_FALSE == 0
