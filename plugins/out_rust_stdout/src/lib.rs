@@ -216,14 +216,14 @@ extern "C" fn plugin_init(
 ) -> c_int {
     unsafe {
         eprintln!("rust_plugin_init ins.config_map: {:?}", (*ins).config_map);
-        // TODO: 
+        // TODO: [MemoryManagement] Need to use Box for the following to allocate it on heap?
         // https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
-        let mut ctx = Box::new(mem::zeroed::<rust_binding::flb_rust_stdout>());
+        let mut ctx = mem::zeroed::<rust_binding::flb_rust_stdout>();
         ctx.ins = ins;
         // https://doc.rust-lang.org/std/ffi/enum.c_void.html
         // https://stackoverflow.com/questions/24191249/working-with-c-void-in-an-ffi
         // https://users.rust-lang.org/t/semantics-of-mut--/5514
-        let ctx_ptr: *mut c_void = Box::into_raw(ctx) as *mut c_void;
+        let ctx_ptr: *mut c_void = &mut ctx as *mut _ as *mut c_void;
         // https://github.com/rust-lang/rust/issues/61820
         // https://stackoverflow.com/questions/17081131/how-can-a-shared-library-so-call-a-function-that-is-implemented-in-its-loadin
         // https://stackoverflow.com/questions/36692315/what-exactly-does-rdynamic-do-and-when-exactly-is-it-needed
@@ -349,7 +349,9 @@ extern "C" fn event_handler(
     // cast incoming data as mk_event, then cast the data field as a pointer
     let event: &rust_binding::mk_event = unsafe { & *(data as *mut rust_binding::mk_event) };
     let th: *mut rust_binding::flb_thread = unsafe { &mut *(event.data as *mut rust_binding::flb_thread) };
-    rust_binding::flb_thread_resume_non_inline(th);
+    unsafe {
+        rust_binding::flb_thread_resume_non_inline(th);
+    }
     0
 }
 
@@ -366,13 +368,13 @@ pub fn ExecuteFuture<T>(mut todo: BoxFuture<T>, config: *mut rust_binding::flb_c
     // https://stackoverflow.com/questions/50107792/what-is-the-better-way-to-wrap-a-ffi-struct-that-owns-or-borrows-data
     // [2nd solution?] https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
     // Might also need to call ::std::mem::forget(obj) in case C will free this for us?
-    let event = rust_binding::mk_event {
+    let mut event = rust_binding::mk_event {
         // Basically follow MK_EVENT_INIT in mk_event.h
         fd: -1,
         type_: 4, // MK_EVENT_CUSTOM
         mask: 0, // MK_EVENT_EMPTY
         status: 1, // MK_EVENT_NONE
-        data: rust_binding::flb_get_pthread() as *mut c_void,
+        data: unsafe {rust_binding::flb_get_pthread() as *mut c_void},
         handler: Some(event_handler),
         _head: rust_binding::mk_list {
             prev: ptr::null_mut(),
@@ -395,13 +397,15 @@ pub fn ExecuteFuture<T>(mut todo: BoxFuture<T>, config: *mut rust_binding::flb_c
                 //         data: *mut ::std::os::raw::c_void,
                 //     ) -> ::std::os::raw::c_int;
                 // }
-                rust_binding::mk_event_add(
-                    (*config).evl, // event loop
-                    -1, // we don't care about fd since we are not using socket here
-                    4, // FLB_ENGINE_EV_CUSTOM
-                    4, // MK_EVENT_WRITE. TODO: figure out the significance of this value
-                    &mut event as *mut _ as *mut c_void,
-                );
+                unsafe{
+                    rust_binding::mk_event_add(
+                        (*config).evl, // event loop
+                        -1, // we don't care about fd since we are not using socket here
+                        4, // FLB_ENGINE_EV_CUSTOM
+                        4, // MK_EVENT_WRITE. TODO: figure out the significance of this value
+                        &mut event as *mut _ as *mut c_void,
+                    );
+                }
                 
                 unsafe {
                     rust_binding::flb_thread_yield_non_inline(rust_binding::flb_get_pthread(), 0); // FLB_FALSE == 0
