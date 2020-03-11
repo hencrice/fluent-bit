@@ -17,7 +17,7 @@ use {
         task::Context,
         time,
     },
-}
+};
 
 use {
     async_std::task,
