@@ -217,11 +217,11 @@ extern "C" fn plugin_init(
         // TODO: 
         // https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
         let mut ctx = Box::new(mem::zeroed::<rust_binding::flb_rust_stdout>());
-        *ctx.ins = ins;
+        ctx.ins = ins;
         // https://doc.rust-lang.org/std/ffi/enum.c_void.html
         // https://stackoverflow.com/questions/24191249/working-with-c-void-in-an-ffi
         // https://users.rust-lang.org/t/semantics-of-mut--/5514
-        let ctx_ptr: *mut c_void = &mut *ctx as *mut _ as *mut c_void;
+        let ctx_ptr: *mut c_void = Box::into_raw(ctx) as *mut c_void;
         // https://github.com/rust-lang/rust/issues/61820
         // https://stackoverflow.com/questions/17081131/how-can-a-shared-library-so-call-a-function-that-is-implemented-in-its-loadin
         // https://stackoverflow.com/questions/36692315/what-exactly-does-rdynamic-do-and-when-exactly-is-it-needed
@@ -320,7 +320,7 @@ struct CCallNonZeroError {
 
 impl fmt::Display for CCallNonZeroError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "call to C returns non-zero code: {}", self.errorCode);
+        write!(f, "call to C returns non-zero code: {}", self.errorCode)
     }
 }
 
@@ -334,7 +334,7 @@ impl error::Error for CCallNonZeroError {
 
 #[no_mangle]
 extern "C" fn event_handler(
-    data: *const c_void,
+    data: *mut c_void,
 ) -> c_int {
     // There are a few examples on whether we need to free the incoming data
     // and whether it should be a *const of *mut:
@@ -353,9 +353,9 @@ extern "C" fn event_handler(
 
 // https://rust-lang.github.io/async-book/02_execution/04_executor.html
 // https://boats.gitlab.io/blog/post/wakers-i/
-pub fn ExecuteFuture<T>(todo: &mut Future<Output=T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
+pub fn ExecuteFuture<T>(todo: &mut dyn Future<Output=T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
     // https://www.reddit.com/r/rust/comments/cfvmj6/is_a_contextwaker_really_required_for_polling_a/
-    let task = NoOp;
+    let task = Arc::new(NoOp);
     let waker = waker_ref(&task);
     let ctx = &mut Context::from_waker(&*waker);
 
@@ -378,7 +378,7 @@ pub fn ExecuteFuture<T>(todo: &mut Future<Output=T>, config: *mut rust_binding::
         },
     };
 
-    loop {
+    let result = loop {
         match todo.poll(ctx) {
             Poll::Ready(todoOutcome) => break Ok(todoOutcome),
             Poll::Pending => {
@@ -394,7 +394,7 @@ pub fn ExecuteFuture<T>(todo: &mut Future<Output=T>, config: *mut rust_binding::
                 //     ) -> ::std::os::raw::c_int;
                 // }
                 rust_binding::mk_event_add(
-                    config.evl, // event loop
+                    (*config).evl, // event loop
                     -1, // we don't care about fd since we are not using socket here
                     4, // FLB_ENGINE_EV_CUSTOM
                     4, // MK_EVENT_WRITE. TODO: figure out the significance of this value
@@ -405,22 +405,25 @@ pub fn ExecuteFuture<T>(todo: &mut Future<Output=T>, config: *mut rust_binding::
                     rust_binding::flb_thread_yield_non_inline(rust_binding::flb_get_pthread(), 0); // FLB_FALSE == 0
                     
                     let mask = event.mask; // Save events mask since mk_event_del() will reset it
-                    let ret = rust_binding::mk_event_del(config.evl, &mut event);
+                    let ret = rust_binding::mk_event_del((*config).evl, &mut event);
                     if ret == -1 {
                         break Err(CCallNonZeroError{ret});
                     }
 
                     // MK_EVENT_WRITE == 4
-                    if (event.mask & 4) {
+                    if (event.mask & 4) == 1 {
                         // same as MK_EVENT_NEW
                         event.mask = 0; // MK_EVENT_EMPTY
                         event.status = 1; // MK_EVENT_NONE
                     } else {
-                        break Err(CCallNonZeroError{ret}) 
+                        eprintln!("eventMask is incorrect: {}", event.mask);
+                        break Err(CCallNonZeroError{-1}) 
                     }
+                }
             },
         }
-    }
+    };
+    result
 }
 
 #[no_mangle]
