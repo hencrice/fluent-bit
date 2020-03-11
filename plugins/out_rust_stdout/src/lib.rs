@@ -281,7 +281,6 @@ extern "C" fn plugin_init(
 
         rust_binding::flb_output_set_context(ins, ctx_ptr);
     }
-
     0
 }
 
@@ -316,8 +315,8 @@ impl ArcWake for NoOp {
 }
 
 #[derive(Debug, Clone)]
-struct CCallNonZeroError {
-    errorCode: c_int,
+pub struct CCallNonZeroError {
+    error_code: c_int,
 }
 
 impl fmt::Display for CCallNonZeroError {
@@ -357,7 +356,7 @@ extern "C" fn event_handler(
 
 // https://rust-lang.github.io/async-book/02_execution/04_executor.html
 // https://boats.gitlab.io/blog/post/wakers-i/
-pub fn ExecuteFuture<T>(mut todo: BoxFuture<T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
+pub fn execute_future<T>(mut todo: BoxFuture<T>, config: *mut rust_binding::flb_config) -> Result<T, CCallNonZeroError> {
     // https://www.reddit.com/r/rust/comments/cfvmj6/is_a_contextwaker_really_required_for_polling_a/
     let task = Arc::new(NoOp);
     let waker = waker_ref(&task);
@@ -384,7 +383,7 @@ pub fn ExecuteFuture<T>(mut todo: BoxFuture<T>, config: *mut rust_binding::flb_c
 
     let result = loop {
         match todo.as_mut().poll(ctx) {
-            Poll::Ready(todoOutcome) => break Ok(todoOutcome),
+            Poll::Ready(todo_outcome) => break Ok(todo_outcome),
             Poll::Pending => {
                 // register a callback by mk_event_add()
                 
@@ -413,7 +412,7 @@ pub fn ExecuteFuture<T>(mut todo: BoxFuture<T>, config: *mut rust_binding::flb_c
                     let mask = event.mask; // Save events mask since mk_event_del() will reset it
                     let ret = rust_binding::mk_event_del((*config).evl, &mut event);
                     if ret == -1 {
-                        break Err(CCallNonZeroError{errorCode: ret});
+                        break Err(CCallNonZeroError{error_code: ret});
                     }
 
                     // MK_EVENT_WRITE == 4
@@ -423,7 +422,7 @@ pub fn ExecuteFuture<T>(mut todo: BoxFuture<T>, config: *mut rust_binding::flb_c
                         event.status = 1; // MK_EVENT_NONE
                     } else {
                         eprintln!("eventMask is incorrect: {}", event.mask);
-                        break Err(CCallNonZeroError{errorCode: -3}) 
+                        break Err(CCallNonZeroError{error_code: -3}) 
                     }
                 }
             },
@@ -471,10 +470,10 @@ extern "C" fn plugin_flush(
     }
 
     let fut = delay_rand_u8();
-    let result = ExecuteFuture(Box::pin(fut), config);
+    let result = execute_future(Box::pin(fut), config);
     match result {
         Ok(v) => eprintln!("delay random number: {:?}", v),
-        Err(e) => eprintln!("ExecuteFuture error: {:?}", e),
+        Err(e) => eprintln!("execute_future error: {:?}", e),
     }
     unsafe {
         rust_binding::flb_output_return_non_inline(1);
