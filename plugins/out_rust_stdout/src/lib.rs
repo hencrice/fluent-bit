@@ -321,7 +321,7 @@ pub struct CCallNonZeroError {
 
 impl fmt::Display for CCallNonZeroError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "call to C returns non-zero code: {}", self.errorCode)
+        write!(f, "call to C returns non-zero code: {}", self.error_code)
     }
 }
 
