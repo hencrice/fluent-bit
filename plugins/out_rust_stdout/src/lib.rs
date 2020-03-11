@@ -9,10 +9,8 @@ use {
         error,
         ffi::c_void,
         fmt,
-        future::Future,
         mem,
         os::raw::{c_char, c_int},
-        pin::Pin,
         ptr,
         sync::Arc,
         task::{Context, Poll},
@@ -469,7 +467,7 @@ extern "C" fn plugin_flush(
     }
 
     let fut = delay_rand_u8();
-    let result = ExecuteFuture(mut Box::pin(fut), config);
+    let result = ExecuteFuture(Box::pin(fut), config);
     match result {
         Ok(v) => eprintln!("delay random number: {:?}", v),
         Err(e) => eprintln!("ExecuteFuture error: {:?}", e),
