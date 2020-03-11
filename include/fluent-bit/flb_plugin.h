@@ -23,6 +23,7 @@
 
 #include <fluent-bit/flb_info.h>
 #include <fluent-bit/flb_sds.h>
+#include <fluent-bit/flb_thread.h>
 #include <monkey/mk_core.h>
 
 #define FLB_PLUGIN_INPUT     1
@@ -49,5 +50,9 @@ int flb_plugin_load(char *path, struct flb_plugins *ctx,
 int flb_plugin_load_router(char *path, struct flb_config *config);
 int flb_plugin_load_config_file(const char *file, struct flb_config *config);
 void flb_plugin_destroy(struct flb_plugins *ctx);
+
+void flb_thread_yield_non_inline(struct flb_thread *th, int ended);
+void flb_thread_resume_non_inline(struct flb_thread *th);
+struct flb_thread * flb_get_pthread();
 
 #endif
