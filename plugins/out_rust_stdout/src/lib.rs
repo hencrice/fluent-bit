@@ -1,11 +1,16 @@
 extern crate rmp_serde as rmps;
 extern crate serde;
 
-use std::collections::HashMap;
-use std::ffi::c_void;
-use std::mem;
-use std::os::raw::{c_char, c_int};
-use std::ptr;
+use {
+    std::{
+        collections::HashMap,
+        error,
+        ffi::c_void,
+        mem,
+        os::raw::{c_char, c_int},
+        ptr,
+    },
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -112,7 +117,7 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
                 set_property: 1,
                 // calculate offset same as https://github.com/fluent/fluent-bit/blob/e6506b7b5364c77bec186d94e51c4b3b51e6fbac/plugins/out_stdout/stdout.c#L171
                 // https://crates.io/crates/memoffset
-                // TODO: need to figure out how to do this because
+                // TODO: need to figure out how to do this
                 offset: 20,
                 desc: ptr::null(),
                 value: rust_binding::flb_config_map_val {
@@ -197,7 +202,8 @@ extern "C" fn plugin_init(
 ) -> c_int {
     unsafe {
         eprintln!("rust_plugin_init ins.config_map: {:?}", (*ins).config_map);
-        // https://medium.com/thinkthenrant/rust-tidbits-mut-mut-let-mut-let-mut-oh-my-ede02aa07eb6
+        // TODO: [MemoryManagement] Need to use Box for the following to allocate it on heap?
+        // https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
         let mut ctx = mem::zeroed::<rust_binding::flb_rust_stdout>();
         ctx.ins = ins;
         // https://doc.rust-lang.org/std/ffi/enum.c_void.html
@@ -324,8 +330,11 @@ extern "C" fn plugin_flush(
 
 #[no_mangle]
 extern "C" fn plugin_exit(data: *mut c_void, config: *mut rust_binding::flb_config) -> c_int {
-    // TODO: Do we need to free the data argument just like the
+    // TODO: [MemoryManagement] Do we need to free the data argument just like the
     // C stdout output plugin?
+    // https://stackoverflow.com/questions/38289355/drop-a-rust-void-pointer-stored-in-an-ffi
+    // https://stackoverflow.com/questions/50107792/what-is-the-better-way-to-wrap-a-ffi-struct-that-owns-or-borrows-data
+    // [2nd solution?] https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
     0
 }
 
