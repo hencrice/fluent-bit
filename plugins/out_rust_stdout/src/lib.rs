@@ -26,16 +26,11 @@ use rust_binding;
 // https://github.com/fluent/fluent-bit/blob/master/src/flb_plugin.c#L273
 // https://github.com/fluent/fluent-bit/blob/master/src/fluent-bit.c#L865
 // requires the struct's exported name to follow certain naming convention.
-// https://users.rust-lang.org/t/option-is-ffi-safe-or-not/29820/9
 #[export_name = "out_rust_stdout_plugin"]
 pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
     rust_binding::flb_output_plugin {
         // seems like plugin type is determined by path name here: https://github.com/fluent/fluent-bit/blob/1.3/src/flb_plugin.c#L223
         type_: 1,
-        // https://doc.rust-lang.org/std/mem/union.MaybeUninit.html
-        // https://doc.rust-lang.org/nomicon/unchecked-uninit.html
-        // We will leave the memory allocation and initialization to
-        // fluentbit core
         proxy: ptr::null_mut(),
         flags: 0,
         // http://jakegoulding.com/rust-ffi-omnibus/string_return/
@@ -57,8 +52,7 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
                 desc: ptr::null(),
                 // https://github.com/fluent/fluent-bit/blob/46c322c0cc8c09908c25f8356ea7bf8b848ff6b2/src/flb_config_map.c#L287
                 // looks like we always allocated new memory, so it might be ok to leave the
-                // following fields uninitialized
-                // Initialie empty struct in Rust: https://gist.github.com/ChrisWellsWood/84421854794037e760808d5d97d21421
+                // some fields uninitialized
                 value: rust_binding::flb_config_map_val {
                     val: rust_binding::flb_config_map_val__bindgen_ty_1 {
                         i_num: rust_binding::__BindgenUnionField::new(),
@@ -141,7 +135,8 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
                     next: ptr::null_mut(),
                 },
             },
-            // EOF
+            // EOF represented by 0 for type_ and null for name:
+            // https://github.com/fluent/fluent-bit/blob/5b08b2073cb86b34fa2419be55078a45fdf37236/src/flb_config_map.c#L274
             rust_binding::flb_config_map {
                 type_: 0,
                 name: ptr::null(),
@@ -204,29 +199,8 @@ extern "C" fn plugin_init(
         eprintln!("rust_plugin_init ins.config_map: {:?}", (*ins).config_map);
         // TODO: [MemoryManagement] Need to use Box for the following to allocate it on heap?
         // https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
-        let mut ctx = mem::zeroed::<rust_binding::flb_rust_stdout>();
+        let mut ctx = Box::new(mem::zeroed::<rust_binding::flb_rust_stdout>());
         ctx.ins = ins;
-        // https://doc.rust-lang.org/std/ffi/enum.c_void.html
-        // https://stackoverflow.com/questions/24191249/working-with-c-void-in-an-ffi
-        // https://users.rust-lang.org/t/semantics-of-mut--/5514
-        let ctx_ptr: *mut c_void = &mut ctx as *mut _ as *mut c_void;
-        // https://github.com/rust-lang/rust/issues/61820
-        // https://stackoverflow.com/questions/17081131/how-can-a-shared-library-so-call-a-function-that-is-implemented-in-its-loadin
-        // https://stackoverflow.com/questions/36692315/what-exactly-does-rdynamic-do-and-when-exactly-is-it-needed
-        // https://stackoverflow.com/questions/5555632/can-gcc-not-complain-about-undefined-references
-        // this is how fluent-bit compiles its built-in plugins:
-        // https://github.com/fluent/fluent-bit/blob/master/plugins/CMakeLists.txt#L110
-        // https://github.com/fluent/fluent-bit/blob/master/plugins/out_stdout/CMakeLists.txt
-        println!("ins: {:?}", ins);
-        println!("ctr_ptr: {:?}", ctx_ptr);
-        let ret = rust_binding::flb_config_map_set(
-            &mut (*ins).properties,
-            (*ins).config_map,
-            ctx_ptr,
-        );
-        if ret == -1 {
-            return ret;
-        }
 
         // One potential solution to access #define constant in C through Rust FFI:
         // https://stackoverflow.com/questions/21485655/how-do-i-use-c-preprocessor-macros-with-rusts-ffi
@@ -263,6 +237,28 @@ extern "C" fn plugin_init(
             } else {
                 ctx.json_date_format = ret;
             }
+        }
+
+        // https://doc.rust-lang.org/std/ffi/enum.c_void.html
+        // https://stackoverflow.com/questions/24191249/working-with-c-void-in-an-ffi
+        // https://users.rust-lang.org/t/semantics-of-mut--/5514
+        let ctx_ptr: *mut c_void = Box::into_raw(ctx) as *mut c_void;
+        // https://github.com/rust-lang/rust/issues/61820
+        // https://stackoverflow.com/questions/17081131/how-can-a-shared-library-so-call-a-function-that-is-implemented-in-its-loadin
+        // https://stackoverflow.com/questions/36692315/what-exactly-does-rdynamic-do-and-when-exactly-is-it-needed
+        // https://stackoverflow.com/questions/5555632/can-gcc-not-complain-about-undefined-references
+        // this is how fluent-bit compiles its built-in plugins:
+        // https://github.com/fluent/fluent-bit/blob/master/plugins/CMakeLists.txt#L110
+        // https://github.com/fluent/fluent-bit/blob/master/plugins/out_stdout/CMakeLists.txt
+        println!("ins: {:?}", ins);
+        println!("ctr_ptr: {:?}", ctx_ptr);
+        let ret = rust_binding::flb_config_map_set(
+            &mut (*ins).properties,
+            (*ins).config_map,
+            ctx_ptr,
+        );
+        if ret == -1 {
+            return ret;
         }
 
         rust_binding::flb_output_set_context(ins, ctx_ptr);
@@ -335,6 +331,11 @@ extern "C" fn plugin_exit(data: *mut c_void, config: *mut rust_binding::flb_conf
     // https://stackoverflow.com/questions/38289355/drop-a-rust-void-pointer-stored-in-an-ffi
     // https://stackoverflow.com/questions/50107792/what-is-the-better-way-to-wrap-a-ffi-struct-that-owns-or-borrows-data
     // [2nd solution?] https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
+    if !data.is_null() {
+        unsafe {
+            Box::from_raw(data as *mut rust_binding::flb_rust_stdout); // Rust auto-drops it at the end of this function
+        }
+    }
     0
 }
 

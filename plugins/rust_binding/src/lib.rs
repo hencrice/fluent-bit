@@ -706,3 +706,5 @@ fn bindgen_test_layout_flb_output_plugin() {
 unsafe impl Sync for flb_input_plugin {}
 unsafe impl Sync for flb_filter_plugin {}
 unsafe impl Sync for flb_output_plugin {}
+
+// TODO: Define common Fluent-bit constants
