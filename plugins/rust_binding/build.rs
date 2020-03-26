@@ -32,6 +32,7 @@ fn main() {
         .blacklist_type("flb_input_plugin")
         .blacklist_type("flb_filter_plugin")
         .blacklist_type("flb_output_plugin")
+        .blacklist_type("flb_sds_t")
         .blacklist_type("flb_net_host")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
