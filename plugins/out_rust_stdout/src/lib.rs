@@ -1,6 +1,3 @@
-extern crate rmp_serde as rmps;
-extern crate serde;
-
 use {
     std::{
         collections::HashMap,
@@ -13,6 +10,7 @@ use {
 };
 
 use serde::{Deserialize, Serialize};
+use rmp_serde as rmps;
 
 use rust_binding;
 
