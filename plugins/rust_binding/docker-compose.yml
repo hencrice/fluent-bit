@@ -1,0 +1,18 @@
+version: "3.7"
+services:
+    nginx:
+        image: nginx:1.17.8
+        ports:
+            - "8080:80"
+        # logging configuration docs: https://docs.docker.com/config/containers/logging/fluentd/
+        logging:
+            driver: fluentd
+            options:
+                fluentd-async-connect: "true" # buffer messages until connection is established to the fluent-bit sidecar
+    fluentbit:
+        image: fluent-bit-rust:latest
+        command: /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent.conf
+        volumes:
+            - ./fluent-bit.conf:/fluent-bit/etc/fluent.conf
+        ports:
+            - "24224:24224"

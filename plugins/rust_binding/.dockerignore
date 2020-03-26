@@ -1,0 +1,2 @@
+# avoid copying the built artifacts into the Docker image
+target
