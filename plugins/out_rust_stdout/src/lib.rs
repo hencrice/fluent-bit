@@ -27,14 +27,9 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
         type_: 1,
         proxy: ptr::null_mut(),
         flags: 0,
-        // http://jakegoulding.com/rust-ffi-omnibus/string_return/
-        // https://stackoverflow.com/questions/53611161/how-do-i-expose-a-compile-time-generated-static-c-string-through-ffi
+        // the following is a constant, properly null-terminated C string
         name: "rust_stdout\0".as_ptr() as *const c_char,
         description: "experiement\0".as_ptr() as *const c_char,
-        // http://jakegoulding.com/rust-ffi-omnibus/
-        // https://medium.com/jim-fleming/complex-types-with-rust-s-ffi-315d14619479
-        // https://s3.amazonaws.com/temp.michaelfbryan.com/arrays/index.html
-        // https://github.com/fluent/fluent-bit/blob/master/src/flb_output.c#L628
         config_map: [
             rust_binding::flb_config_map {
                 type_: 0,
@@ -46,7 +41,7 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
                 desc: ptr::null(),
                 // https://github.com/fluent/fluent-bit/blob/46c322c0cc8c09908c25f8356ea7bf8b848ff6b2/src/flb_config_map.c#L287
                 // looks like we always allocated new memory, so it might be ok to leave the
-                // some fields uninitialized
+                // some fields uninitialized or null
                 value: rust_binding::flb_config_map_val {
                     val: rust_binding::flb_config_map_val__bindgen_ty_1 {
                         i_num: rust_binding::__BindgenUnionField::new(),
@@ -104,8 +99,8 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
                 flags: 0,
                 set_property: 1,
                 // calculate offset same as https://github.com/fluent/fluent-bit/blob/e6506b7b5364c77bec186d94e51c4b3b51e6fbac/plugins/out_stdout/stdout.c#L171
-                // https://crates.io/crates/memoffset
-                // TODO: need to figure out how to do this
+                // I couldn't find an offsetof implementation in Rust that works with static variable.
+                // TODO: need to figure out how to properly calculate this
                 offset: 20,
                 desc: ptr::null(),
                 value: rust_binding::flb_config_map_val {
@@ -170,10 +165,7 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
             listen: ptr::null(),
             uri: ptr::null(),
         },
-        // TODO: figure out whther I need to deal with cb_pre_run
         cb_pre_run: None,
-        // From https://github.com/fluent/fluent-bit/blob/e6506b7b5364c77bec186d94e51c4b3b51e6fbac/src/flb_plugin.c#L248
-        // seems like it will be allocated so no need to allocate here
         _head: rust_binding::mk_list {
             prev: ptr::null_mut(),
             next: ptr::null_mut(),
@@ -190,17 +182,16 @@ extern "C" fn plugin_init(
     data: *mut c_void,
 ) -> c_int {
     unsafe {
-        // TODO: [MemoryManagement] Need to use Box for the following to allocate it on heap?
         // https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
+        // Allocate memory on the heap by using Box. Otherwise the memory will be allocated on the stack and
+        // the ctx_ptr below will point to an invalid chunk of memory right after this function returns.
         let mut ctx = Box::new(mem::zeroed::<rust_binding::flb_rust_stdout>());
         ctx.ins = ins;
 
-        // One potential solution to access #define constant in C through Rust FFI:
-        // https://stackoverflow.com/questions/21485655/how-do-i-use-c-preprocessor-macros-with-rusts-ffi
+        // TODO: define constant
         ctx.out_format = 0;
         let fmt_ptr =
             rust_binding::flb_output_get_property("format".as_ptr() as *const c_char, ins);
-        // https://doc.rust-lang.org/std/primitive.pointer.html#method.as_ref
         if fmt_ptr.as_ref().is_some() {
             let ret = rust_binding::flb_pack_to_json_format_type(fmt_ptr);
             if ret == -1 {
