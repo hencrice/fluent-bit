@@ -96,6 +96,7 @@ RUN mkdir -p /fluent-bit/bin /fluent-bit/etc /fluent-bit/log /tmp/fluent-bit-mas
     -DFLB_FILTER_NEST=Off \
     -DFLB_FILTER_LUA=Off \
     -DFLB_FILTER_RECORD_MODIFIER=Off \
+    -DFLB_FILTER_EXPECT=Off \
     -DFLB_PROXY_GO=Off .. && \
     make -j $(getconf _NPROCESSORS_ONLN) && echo $PWD && tree && install bin/fluent-bit /fluent-bit/bin/ && make clean
 # RUN cat /usr/src/myapp/fluent-bit/build/Rust/src/flb-plugin-out_rust_stdout_target-stamp/flb-plugin-out_rust_stdout_target-build-*.log
