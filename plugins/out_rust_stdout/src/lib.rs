@@ -188,17 +188,15 @@ extern "C" fn plugin_init(
         let mut ctx = Box::new(mem::zeroed::<rust_binding::flb_rust_stdout>());
         ctx.ins = ins;
 
-        // TODO: define constant
+        // TODO: define constant in Rust
         ctx.out_format = 0;
         let fmt_ptr =
             rust_binding::flb_output_get_property("format".as_ptr() as *const c_char, ins);
         if fmt_ptr.as_ref().is_some() {
             let ret = rust_binding::flb_pack_to_json_format_type(fmt_ptr);
             if ret == -1 {
-                // TODO: use fluent-bit's logger? flb_plg_error is a macro defined
+                // TODO: If we want to use fluent-bit's logger, need to property expose the macro defined at:
                 // at https://github.com/fluent/fluent-bit/blob/master/include/fluent-bit/flb_output_plugin.h#L28
-                // flb_plg_error(ctx->ins, "invalid json_date_format '%s'. "
-                //              "Using 'double' type", tmp);
                 println!("flb_pack_to_json_format_type error")
             } else {
                 ctx.out_format = ret;
@@ -213,27 +211,16 @@ extern "C" fn plugin_init(
         if date_fmt_ptr.as_ref().is_some() {
             let ret = rust_binding::flb_pack_to_json_date_type(date_fmt_ptr);
             if ret == -1 {
-                // TODO: use fluent-bit's logger? flb_plg_error is a macro defined
-                // at https://github.com/fluent/fluent-bit/blob/master/include/fluent-bit/flb_output_plugin.h#L28
-                // flb_plg_error(ctx->ins, "invalid json_date_format '%s'. "
-                // "Using 'double' type", tmp);
+                // TODO: use fluent-bit's logger?
                 println!("flb_pack_to_json_date_type error");
             } else {
                 ctx.json_date_format = ret;
             }
         }
 
-        // https://doc.rust-lang.org/std/ffi/enum.c_void.html
-        // https://stackoverflow.com/questions/24191249/working-with-c-void-in-an-ffi
-        // https://users.rust-lang.org/t/semantics-of-mut--/5514
+        // Retrieve a raw pointer out of the heap-allocated variable, ctx, then cast the
+        // variable as raw *mut c_void pointer.
         let ctx_ptr: *mut c_void = Box::into_raw(ctx) as *mut c_void;
-        // https://github.com/rust-lang/rust/issues/61820
-        // https://stackoverflow.com/questions/17081131/how-can-a-shared-library-so-call-a-function-that-is-implemented-in-its-loadin
-        // https://stackoverflow.com/questions/36692315/what-exactly-does-rdynamic-do-and-when-exactly-is-it-needed
-        // https://stackoverflow.com/questions/5555632/can-gcc-not-complain-about-undefined-references
-        // this is how fluent-bit compiles its built-in plugins:
-        // https://github.com/fluent/fluent-bit/blob/master/plugins/CMakeLists.txt#L110
-        // https://github.com/fluent/fluent-bit/blob/master/plugins/out_stdout/CMakeLists.txt
         let ret = rust_binding::flb_config_map_set(
             &mut (*ins).properties,
             (*ins).config_map,
@@ -255,13 +242,6 @@ struct Record {
     timestamp: u32,
     record: HashMap<String, String>,
 }
-
-// #[derive(Debug, PartialEq, Deserialize, Serialize)]
-// struct CPURecord {
-//     cpu_p: f32,
-//     user_p: f32,
-//     system_p: f32,
-// }
 
 #[no_mangle]
 extern "C" fn plugin_flush(
