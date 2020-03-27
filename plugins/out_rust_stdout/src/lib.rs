@@ -124,7 +124,7 @@ pub static mut OUT_STDOUT2_PLUGIN: rust_binding::flb_output_plugin =
                     next: ptr::null_mut(),
                 },
             },
-            // EOF represented by 0 for type_ and null for name:
+            // This item represents the "EOF" of this config_map list. It consists of 0 for type_ and null for name:
             // https://github.com/fluent/fluent-bit/blob/5b08b2073cb86b34fa2419be55078a45fdf37236/src/flb_config_map.c#L274
             rust_binding::flb_config_map {
                 type_: 0,
@@ -244,7 +244,7 @@ struct Record {
 }
 
 #[no_mangle]
-extern "C" fn plugin_flush(
+extern "C" fn plugin_flush<'a>(
     data: *const c_void,
     bytes: usize,
     tag: *const c_char,
@@ -253,26 +253,17 @@ extern "C" fn plugin_flush(
     out_context: *mut c_void,
     config: *mut rust_binding::flb_config,
 ) {
-    // https://www.reddit.com/r/rust/comments/9wk0jy/free_memory_allocated_from_c_through_ffi/
-    // https://users.rust-lang.org/t/c-ffi-memory-leak-take-ownership-of-allocated-memory-in-c-c/24337/3
-    // https://hacks.mozilla.org/2019/04/crossing-the-rust-ffi-frontier-with-protocol-buffers/
-
-    // https://github.com/fluent/fluent-bit-go/blob/master/output/decoder.go#L57
-    // https://github.com/aws/amazon-kinesis-firehose-for-fluent-bit/blob/6ca31170fc03aa8081255de927a87156d787ce14/fluent-bit-firehose.go#L105
-    // https://github.com/fluent/fluent-bit-go/blob/master/output/decoder.go#L70
-    // just unpack the data, which is in msgpack format,
-    // generated from https://docs.fluentbit.io/manual/input/cpu
-    // and print.
+    // unpack `data`, which is of length `bytes` and in msgpack format
 
     // https://doc.rust-lang.org/std/slice/fn.from_raw_parts.html
-    // https://stackoverflow.com/questions/27150652/how-can-i-get-an-array-or-a-slice-from-a-raw-pointer
-    let msg_pack_raw_data: &[u8] = unsafe {
-        // TODO: verify correct lifetime of the returned variable:
+    let msg_pack_raw_data: &'a [u8] = unsafe {
+        // Rust code here is not responsible for deallocating the memory section pointed
+        // by `data`. `msg_pack_raw_data` is merely a read-only reference.
+        // Additional info:
         // https://stackoverflow.com/questions/33305573/why-is-the-lifetime-important-for-slicefrom-raw-parts
         std::slice::from_raw_parts(data as *const u8, bytes)
     };
 
-    // https://docs.rs/rmp-serde/0.14.3/rmp_serde/
     let value: Result<Record, rmps::decode::Error> = rmps::from_slice(msg_pack_raw_data);
     match value {
         Ok(v) => {
@@ -288,11 +279,10 @@ extern "C" fn plugin_flush(
 
 #[no_mangle]
 extern "C" fn plugin_exit(data: *mut c_void, config: *mut rust_binding::flb_config) -> c_int {
-    // TODO: [MemoryManagement] Do we need to free the data argument just like the
-    // C stdout output plugin?
-    // https://stackoverflow.com/questions/38289355/drop-a-rust-void-pointer-stored-in-an-ffi
-    // https://stackoverflow.com/questions/50107792/what-is-the-better-way-to-wrap-a-ffi-struct-that-owns-or-borrows-data
-    // [2nd solution?] https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
+    // Deallocate the `ctx` allocated in `plugin_init()`.
+    
+    // Additional info:
+    // 2nd solution on https://stackoverflow.com/questions/28278213/how-to-lend-a-rust-object-to-c-code-for-an-arbitrary-lifetime
     if !data.is_null() {
         unsafe {
             Box::from_raw(data as *mut rust_binding::flb_rust_stdout); // Rust auto-drops it at the end of this function
@@ -301,6 +291,8 @@ extern "C" fn plugin_exit(data: *mut c_void, config: *mut rust_binding::flb_conf
     0
 }
 
+// TODO: add real tests
+// TODO: refactor some of the unsafe operations into separate utilities for more comprehensive testing
 #[cfg(test)]
 mod tests {
     #[test]
